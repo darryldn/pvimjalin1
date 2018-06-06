@@ -66,7 +66,7 @@ public class PvWsWithPostProcessorImpl implements IPvWs {
             }
             return;
         } catch (PvWsException ex) {
-            Logger.getLogger(DefaultPvWsImpl.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DefaultPvWsImpl.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
         response.sendError(HttpServletResponse.SC_BAD_REQUEST);
     }
