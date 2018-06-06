@@ -130,14 +130,14 @@ class PvWsProcessorInternal {
         PVAuthToken auth = requestObj.getAuth();
         
         if (auth == null) {
-            throw new PvWsException();
+            throw new PvWsException("No authentication data given on request");
         }
         
         DefaultWsConfig wsConfig = new DefaultWsConfig(operationName);
         
         String content = InputTemplateCache.getInstance().getContent(wsConfig.getContentFileName());
         if (content == null ) {
-            throw new PvWsException();
+            throw new PvWsException(String.format("Content of %s is null", wsConfig.getContentFileName()));
         }
         
         String replacedContent = Commons.replaceFWVars(content, new Commons.IReplaceFWVarCallback() {
