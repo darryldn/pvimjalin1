@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <system systemId="file:/C:/Users/darryl.sulistyan/Documents/Projects/jalin/mobile/pvim/PVIM_DNI_Ext/TicketService.wsdl" uri="src/conf/xml-resources/web-service-references/TicketService/wsdl/TicketService.wsdl"/>
+</catalog>
