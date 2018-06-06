@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-deployment-structure>
+    <deployment>
+        <dependencies>
+            
+            <!-- Fix error org.dom4j classcastexception -->
+            <module name="org.dom4j"/>
+            
+            <!-- From PVIM.ear -->
+            
+            <module name="org.slf4j"/>
+            <module name="org.javassist" />
+            
+            <!-- 
+                When excluding org.hibernate from WildFly, no class found for org.jboss.jandex.IndexView 
+                Add it to dependency!
+            -->
+            
+            <module name="org.jboss.jandex" />
+            
+            <!-- From PVIM.ear -->
+            <module name="org.bouncycastle" slot="main" export="true" />
+            <module name="net.sourceforge.jtds" slot="main" export="true" optional="true"/>
+            <module name="com.oracle.ojdbc6" slot="main" export="true" optional="true"/>
+        </dependencies>
+        <exclude-subsystems>
+                <subsystem name="logging" />
+        </exclude-subsystems>
+        <exclusions>
+            
+            <!-- From PVIM.ear Wildfly has hibernate 5.x-->
+            
+            <module name="org.hibernate" slot="main"/>
+           <!--<module name="org.hibernate.envers" />  
+           <module name="org.hibernate.commons-annotations" />  
+           -->
+        </exclusions>
+    </deployment>
+    
+    <!-- Add exclusion for subdeployments too!! -->
+    <!--
+    <sub-deployment name="PvimLocation.war">
+        <exclusions>-->
+            
+            <!-- From PVIM.ear Wildfly has hibernate 5.x-->
+            
+            <!--<module name="org.hibernate" slot="main"/>-->
+           <!--<module name="org.hibernate.envers" />  -->
+           <!--<module name="org.hibernate.commons-annotations" />  -->
+           
+    <!--    </exclusions> -->
+    <!--</sub-deployment>-->
+    
+</jboss-deployment-structure>
