@@ -13,10 +13,10 @@ public final class PVIMErrorCodes {
  
     public static final int 
             S_OK = 0,
-            E_CONFIG = -1,
-            E_NET = -2,
-            E_INPUT_NO_NOTES = -3,
-            E_DATABASE_ERROR = -2400001;
+            E_CONFIG = -98001,
+            E_NET = -98002,
+            E_INPUT_NO_NOTES = -98003,
+            E_DATABASE_ERROR = -98004;
     
     private PVIMErrorCodes() {
         

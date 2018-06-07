@@ -6,6 +6,7 @@
 package id.dni.pvim.ext.web;
 
 import com.google.gson.Gson;
+import id.dni.pvim.ext.web.in.Commons;
 import id.dni.pvim.ext.web.in.Util;
 import id.dni.pvim.ext.web.rest.PVIMGetOpenTicketsByMachineNumberRequest;
 import id.dni.pvim.ext.web.rest.PVIMGetOpenTicketsByMachineNumberResponse;
@@ -45,17 +46,23 @@ public class TicketServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String requestPath = request.getPathInfo();
-        if (requestPath == null || requestPath.equals("/")) {
+        String[] requestSplits = Commons.getRequestPath(request.getPathInfo(), 2);
+        if (requestSplits == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-
-        String[] requestSplits = requestPath.split("/");
-        if (requestSplits.length < 2) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
+        
+//        String requestPath = request.getPathInfo();
+//        if (requestPath == null || requestPath.equals("/")) {
+//            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+//            return;
+//        }
+//
+//        String[] requestSplits = requestPath.split("/");
+//        if (requestSplits.length < 2) {
+//            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+//            return;
+//        }
 
         String requestOperation = requestSplits[1];
         if (null == requestOperation) {

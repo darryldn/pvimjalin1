@@ -13,10 +13,11 @@ public class PVErrorCodes {
     
     public static final int 
             S_OK = 0,
-            E_CONFIG = -1,
-            E_NET = -2,
-            E_INPUT_NO_NOTES = -3,
-            E_INTERNAL_SERVER_ERROR = -4;
+            E_CONFIG = -99001,
+            E_NET = -99002,
+            E_INPUT_NO_NOTES = -99003,
+            E_INTERNAL_SERVER_ERROR = -99004,
+            E_DATABASE_ERROR = -99005;
     
     private PVErrorCodes() {
         

@@ -9,20 +9,20 @@ package id.dni.pvim.ext.db.exception;
  *
  * @author darryl.sulistyan
  */
-public class PVIMDBException extends Exception {
+public class PvExtPersistenceException extends Exception {
 
-    public PVIMDBException() {
+    public PvExtPersistenceException() {
     }
 
-    public PVIMDBException(String message) {
+    public PvExtPersistenceException(String message) {
         super(message);
     }
 
-    public PVIMDBException(String message, Throwable cause) {
+    public PvExtPersistenceException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public PVIMDBException(Throwable cause) {
+    public PvExtPersistenceException(Throwable cause) {
         super(cause);
     }
     

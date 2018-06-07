@@ -9,20 +9,24 @@ package id.dni.pvim.ext.db.dao;
  *
  * @author darryl.sulistyan
  */
-public class TicketNotesDaoFactory {
+public class DaoFactory {
     
-    private final static TicketNotesDaoFactory INSTANCE = new TicketNotesDaoFactory();
+    private final static DaoFactory INSTANCE = new DaoFactory();
     
-    private TicketNotesDaoFactory() {
+    private DaoFactory() {
         
     }
     
-    public static TicketNotesDaoFactory getInstance() {
+    public static DaoFactory getInstance() {
         return INSTANCE;
     }
     
-    public ITicketNotesDao getDao() {
+    public ITicketNotesDao getTicketNotesDao() {
         return new TicketNotesDaoImpl();
+    }
+    
+    public IMachineGpsDao getMachineGpsDao() {
+        return new MachineGpsDaoImpl();
     }
     
 }

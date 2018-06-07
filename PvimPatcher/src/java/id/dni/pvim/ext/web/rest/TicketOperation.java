@@ -16,8 +16,8 @@ import com.wn.econnect.inbound.wsi.ticket.TicketDto;
 import id.dni.pvim.ext.conf.PatcherConfig;
 import id.dni.pvim.ext.db.dao.DBTicketNotesDao;
 import id.dni.pvim.ext.db.dao.ITicketNotesDao;
-import id.dni.pvim.ext.db.dao.TicketNotesDaoFactory;
-import id.dni.pvim.ext.db.exception.PVIMDBException;
+import id.dni.pvim.ext.db.dao.DaoFactory;
+import id.dni.pvim.ext.db.exception.PvExtPersistenceException;
 import id.dni.pvim.ext.err.PVIMErrorCodes;
 import id.dni.pvim.ext.web.in.Commons;
 import id.dni.pvim.ext.web.in.Util;
@@ -28,6 +28,7 @@ import id.dni.pvim.ext.web.soap.PVIMWSServiceRegistry;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -131,7 +132,6 @@ public class TicketOperation {
         return resp;
     }
     
-    
     public PVIMGetTicketByNumberResponse findTicket(PVIMGetTicketByNumberRequest request) {
         
         String ticketNumber = request.getTicketNumber();
@@ -149,8 +149,8 @@ public class TicketOperation {
                     Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "No notes given. Read from database!");
                     
                     // Obtain ticket notes and append it in ticketDto!
-                    ITicketNotesDao ticketNotesDao = TicketNotesDaoFactory.getInstance().getDao();
-                    List<DBTicketNotesDao> ticketNotes = ticketNotesDao.getTicketNotes(ticketNumber);
+                    ITicketNotesDao ticketNotesDao = DaoFactory.getInstance().getTicketNotesDao();
+                    List<DBTicketNotesDao> ticketNotes = ticketNotesDao.getTicketNotesWithParent(ticketNumber);
                     StringBuilder sb = new StringBuilder();
                     for (DBTicketNotesDao ticketNote : ticketNotes) {
                         sb.append(ticketNote.getNotes()).append("\n");
@@ -169,7 +169,7 @@ public class TicketOperation {
             Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             resp.setErr(readException(ex));
             
-        } catch (PVIMDBException ex) {
+        } catch (PvExtPersistenceException ex) {
             Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             OperationError err = new OperationError();
             err.setErrCode("" + PVIMErrorCodes.E_DATABASE_ERROR);
@@ -188,7 +188,12 @@ public class TicketOperation {
         
         try {
             ArrayOfTicketDto ticketDtoList = pvimGetOpenTickets(machineNumber, auth);
-            List<TicketDto> tc = ticketDtoList.getTicketDto();
+            List<TicketDto> tc;
+            if (ticketDtoList == null) {
+                tc = Collections.EMPTY_LIST;
+            } else {
+                tc = ticketDtoList.getTicketDto();
+            }
             List<RestTicketDto> rstc = new ArrayList<>();
             for (TicketDto t : tc) {
                 rstc.add(new RestTicketDto(t));

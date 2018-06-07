@@ -8,11 +8,12 @@ package id.dni.pvim.ext.web;
 import com.google.gson.Gson;
 import id.dni.pvim.ext.web.in.Commons;
 import id.dni.pvim.ext.web.in.Util;
-import id.dni.pvim.ext.web.rest.PVLoginRequest;
-import id.dni.pvim.ext.web.rest.PVLoginResponse;
-import id.dni.pvim.ext.web.rest.UserOperation;
+import id.dni.pvim.ext.web.rest.LocationOperation;
+import id.dni.pvim.ext.web.rest.PVGetDeviceIDRequest;
+import id.dni.pvim.ext.web.rest.PVGetDeviceIDResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -23,10 +24,10 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author darryl.sulistyan
  */
-@WebServlet(name = "UserServlet", urlPatterns = {"/user/*"})
-public class UserServlet extends HttpServlet {
-
-    private static Gson GSON = new Gson();
+@WebServlet(name = "LocationServlet", urlPatterns = {"/location/*"})
+public class LocationServlet extends HttpServlet {
+    
+    private static final Gson GSON = new Gson();
     
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -41,11 +42,12 @@ public class UserServlet extends HttpServlet {
             throws ServletException, IOException {
         
         String[] requestSplits = Commons.getRequestPath(request.getPathInfo(), 2);
+        
         if (requestSplits == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-//        
+        
 //        String requestPath = request.getPathInfo();
 //        if (requestPath == null || requestPath.equals("/")) {
 //            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -59,18 +61,28 @@ public class UserServlet extends HttpServlet {
 //        }
 
         String requestOperation = requestSplits[1];
-        if ("login".equals(requestOperation)) {
+        if (null == requestOperation) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            
+        } else {
             // only do this ONCE!
             InputStream in = request.getInputStream();
             String input = Util.inputStreamToString(in);
-            UserOperation oper = new UserOperation();
-            PVLoginRequest requestData = GSON.fromJson(input, PVLoginRequest.class);
-            PVLoginResponse responseData = oper.login(requestData);
-            Util.sendAsJson(response, responseData);
+            LocationOperation oper = new LocationOperation();
             
-        } else {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            switch (requestOperation) {
+                case "getDeviceIDLocation": {
+                    PVGetDeviceIDRequest req = GSON.fromJson(input, PVGetDeviceIDRequest.class);
+                    PVGetDeviceIDResponse resp = oper.getDeviceIDLocation(req);
+                    Util.sendAsJson(response, resp);
+                    
+                } break;
+                default:
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    break;
+            }
         }
+        
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
