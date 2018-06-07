@@ -31,6 +31,26 @@ public class Commons {
     }
     
     /**
+     * Checks request path from request.getPathInfo()
+     * @param requestPath from request.getPathInfo()
+     * @param length the depth of valid request
+     * @return null if the depth is not satisfied. else, requestPath, split into
+     * parts divided by "/"
+     */
+    public static String[] getRequestPath(String requestPath, int length) {
+        if (requestPath == null || requestPath.equals("/")) {
+            return null;
+        }
+
+        String[] requestSplits = requestPath.split("/");
+        if (requestSplits.length < length) {
+            return null;
+        }
+        
+        return requestSplits;
+    }
+    
+    /**
      * Assumed charset: UTF8
      * @param inputStream
      * @return

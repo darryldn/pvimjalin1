@@ -11,9 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 /**
@@ -36,13 +33,8 @@ public class PVIMDBConnectionFactory {
     
     public final synchronized DataSource getDataSource() {
         if (dataSource == null) {
-            
-            try {
-                Context ctx = (Context) new InitialContext();
-                dataSource = (DataSource) ctx.lookup(DBConnectionConfig.getPVIMDataSourceJDNIName());
-            } catch (NamingException ex) {
-                Logger.getLogger(PVIMDBConnectionFactory.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            dataSource = DBConnectionFactory.getInstance().getDataSource(
+                    DBConnectionConfig.getPVIMDataSourceJDNIName());
         }
         
         return dataSource;
