@@ -34,17 +34,23 @@ public class GatewayServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String requestPath = request.getPathInfo();
-        if (requestPath == null || requestPath.equals("/")) {
+        String[] requestSplits = Commons.getRequestPath(request.getPathInfo(), 3);
+        if (requestSplits == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-
-        String[] requestSplits = requestPath.split("/");
-        if (requestSplits.length < 3) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
+        
+//        String requestPath = request.getPathInfo();
+//        if (requestPath == null || requestPath.equals("/")) {
+//            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+//            return;
+//        }
+//
+//        String[] requestSplits = requestPath.split("/");
+//        if (requestSplits.length < 3) {
+//            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+//            return;
+//        }
 
         String requestService = requestSplits[1];
         String requestOperation = requestSplits[2];
