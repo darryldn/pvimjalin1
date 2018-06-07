@@ -5,6 +5,7 @@
  */
 package id.dni.pvim.ext.web.rest;
 
+import com.wn.econnect.inbound.wsi.ticket.ArrayOfTicketDto;
 import id.dni.pvim.ext.web.in.OperationError;
 import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import com.wn.econnect.inbound.wsi.ticket.ITicketWebService;
@@ -26,6 +27,7 @@ import id.dni.pvim.ext.web.soap.PVIMTicketState;
 import id.dni.pvim.ext.web.soap.PVIMWSServiceRegistry;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -179,6 +181,29 @@ public class TicketOperation {
         return resp;
     }
     
+    public PVIMGetOpenTicketsByMachineNumberResponse getOpenTickets(PVIMGetOpenTicketsByMachineNumberRequest request) {
+        String machineNumber = request.getMachineNumber();
+        PVIMAuthToken auth = request.getAuth();
+        PVIMGetOpenTicketsByMachineNumberResponse resp = new PVIMGetOpenTicketsByMachineNumberResponse();
+        
+        try {
+            ArrayOfTicketDto ticketDtoList = pvimGetOpenTickets(machineNumber, auth);
+            List<TicketDto> tc = ticketDtoList.getTicketDto();
+            List<RestTicketDto> rstc = new ArrayList<>();
+            for (TicketDto t : tc) {
+                rstc.add(new RestTicketDto(t));
+            }
+            resp.setTickets(rstc);
+            
+        } catch (PvimWSException ex) {
+            Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, null, ex);
+            resp.setErr(readException(ex));
+            
+        }
+        
+        return resp;
+    }
+    
     private void modifyPortService(BindingProvider port, PVIMAuthToken auth) {
         Map<String, Object> config = new HashMap<>();
         
@@ -213,6 +238,10 @@ public class TicketOperation {
 //        ITicketWebServicePortType port = service.getITicketWebServiceHttpPort();
 //        modifyPortService((BindingProvider)port, auth);
 //        return port.getTicketByNumber(ticketNumber);
+    }
+    
+    private ArrayOfTicketDto pvimGetOpenTickets(String machineNumber, PVIMAuthToken auth) throws PvimWSException {
+        return getWebServicePort(auth).getOpenTickets(machineNumber);
     }
     
 }

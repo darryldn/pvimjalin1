@@ -7,6 +7,8 @@ package id.dni.pvim.ext.web;
 
 import com.google.gson.Gson;
 import id.dni.pvim.ext.web.in.Util;
+import id.dni.pvim.ext.web.rest.PVIMGetOpenTicketsByMachineNumberRequest;
+import id.dni.pvim.ext.web.rest.PVIMGetOpenTicketsByMachineNumberResponse;
 import id.dni.pvim.ext.web.rest.PVIMGetTicketByNumberRequest;
 import id.dni.pvim.ext.web.rest.PVIMGetTicketByNumberResponse;
 import id.dni.pvim.ext.web.rest.PVIMUpdateTicketRequest;
@@ -105,6 +107,13 @@ public class TicketServlet extends HttpServlet {
                     PVIMUpdateTicketRequest requestData = 
                             GSON.fromJson(input, PVIMUpdateTicketRequest.class);
                     PVIMUpdateTicketResponse responseTicket = oper.updateTicketGaveUp(requestData);
+                    Util.sendAsJson(response, responseTicket);
+                    
+                } break;
+                case "getOpenTickets" : {
+                    PVIMGetOpenTicketsByMachineNumberRequest requestData =
+                            GSON.fromJson(input, PVIMGetOpenTicketsByMachineNumberRequest.class);
+                    PVIMGetOpenTicketsByMachineNumberResponse responseTicket = oper.getOpenTickets(requestData);
                     Util.sendAsJson(response, responseTicket);
                     
                 } break;
