@@ -10,11 +10,12 @@
 <project name="PvimPatcher" default="default" basedir=".">
     <description>Builds, tests, and runs the project PvimPatcher.</description>
     <import file="nbproject/build-impl.xml"/>
-    
+    <!-- soapconfig.properties is moved to <default package>, automatically added to build. -->
+    <!--
     <target name="-pre-dist">
         <copy file="soapconfig.properties" todir="${build.dir}/web/WEB-INF/classes" />
     </target>
-
+-->
     <!--
 
     There exist several targets which are by default empty and which can be 
