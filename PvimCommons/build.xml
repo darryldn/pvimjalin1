@@ -10,11 +10,12 @@
 <project name="PvimCommons" default="default" basedir=".">
     <description>Builds, tests, and runs the project PvimCommons.</description>
     <import file="nbproject/build-impl.xml"/>
-    
+    <!-- Already added in default package. No manual moves -->
+    <!--
     <target name="-pre-jar">
         <copy file="dbconfig.properties" todir="${build.dir}/classes" />
     </target>
-    
+    -->
     <!--
 
     There exist several targets which are by default empty and which can be 
