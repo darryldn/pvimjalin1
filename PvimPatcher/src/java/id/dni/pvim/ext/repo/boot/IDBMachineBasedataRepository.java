@@ -3,16 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package id.dni.pvim.ext.db.dao;
+package id.dni.pvim.ext.repo.boot;
 
-import id.dni.pvim.ext.db.exception.PvExtPersistenceException;
+import id.dni.pvim.ext.db.vo.DBMachineBasedataVo;
+import id.dni.pvim.ext.repo.IRepository;
 
 /**
  *
  * @author darryl.sulistyan
  */
-public interface IMachineGpsDao {
-    
-    public DBMachineGpsDao getMachineGps(String deviceID) throws PvExtPersistenceException;
+public interface IDBMachineBasedataRepository extends IRepository<DBMachineBasedataVo> {
     
 }

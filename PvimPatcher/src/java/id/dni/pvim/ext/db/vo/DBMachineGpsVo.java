@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package id.dni.pvim.ext.db.dao;
+package id.dni.pvim.ext.db.vo;
 
 import java.math.BigDecimal;
 
@@ -11,7 +11,7 @@ import java.math.BigDecimal;
  *
  * @author darryl.sulistyan
  */
-public class DBMachineGpsDao {
+public class DBMachineGpsVo {
     
     private String deviceID;
     private long lastupdate;

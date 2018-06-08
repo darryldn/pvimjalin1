@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package id.dni.pvim.ext.db.dao;
+package id.dni.pvim.ext.repo;
 
 import id.dni.pvim.ext.db.exception.PvExtPersistenceException;
 import java.util.List;
@@ -11,11 +11,10 @@ import java.util.List;
 /**
  *
  * @author darryl.sulistyan
+ * @param <T>
  */
-public interface ITicketNotesDao {
+public interface IRepository<T> {
     
-    public List<DBTicketNotesDao> getTicketNotes(String ticketNumber) throws PvExtPersistenceException;
-    
-    public List<DBTicketNotesDao> getTicketNotesWithParent(String ticketNumber) throws PvExtPersistenceException;
+    public List<T> query(ISpecification specification) throws PvExtPersistenceException;
     
 }

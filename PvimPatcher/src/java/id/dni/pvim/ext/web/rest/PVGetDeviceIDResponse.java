@@ -5,7 +5,7 @@
  */
 package id.dni.pvim.ext.web.rest;
 
-import id.dni.pvim.ext.db.dao.DBMachineGpsDao;
+import id.dni.pvim.ext.db.vo.DBMachineGpsVo;
 import id.dni.pvim.ext.web.in.OperationError;
 
 /**
@@ -15,7 +15,7 @@ import id.dni.pvim.ext.web.in.OperationError;
 public class PVGetDeviceIDResponse {
     
     private OperationError err;
-    private DBMachineGpsDao location;
+    private DBMachineGpsVo location;
 
     public OperationError getErr() {
         return err;
@@ -25,11 +25,11 @@ public class PVGetDeviceIDResponse {
         this.err = err;
     }
 
-    public DBMachineGpsDao getLocation() {
+    public DBMachineGpsVo getLocation() {
         return location;
     }
 
-    public void setLocation(DBMachineGpsDao location) {
+    public void setLocation(DBMachineGpsVo location) {
         this.location = location;
     }
     

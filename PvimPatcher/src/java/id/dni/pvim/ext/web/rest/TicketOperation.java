@@ -14,9 +14,8 @@ import com.wn.econnect.inbound.wsi.ticket.ObjectFactory;
 import com.wn.econnect.inbound.wsi.ticket.PvimWSException;
 import com.wn.econnect.inbound.wsi.ticket.TicketDto;
 import id.dni.pvim.ext.conf.PatcherConfig;
-import id.dni.pvim.ext.db.dao.DBTicketNotesDao;
-import id.dni.pvim.ext.db.dao.ITicketNotesDao;
-import id.dni.pvim.ext.db.dao.DaoFactory;
+import id.dni.pvim.ext.db.vo.DBTicketNotesVo;
+import id.dni.pvim.ext.repo.boot.RepositoryFactory;
 import id.dni.pvim.ext.db.exception.PvExtPersistenceException;
 import id.dni.pvim.ext.err.PVIMErrorCodes;
 import id.dni.pvim.ext.web.in.Commons;
@@ -35,6 +34,7 @@ import java.util.logging.Logger;
 import javax.xml.bind.JAXBElement;
 import javax.xml.ws.BindingProvider;
 import javax.xml.ws.handler.Handler;
+import id.dni.pvim.ext.repo.boot.ITicketNotesRepository;
 
 /**
  *
@@ -149,10 +149,10 @@ public class TicketOperation {
                     Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "No notes given. Read from database!");
                     
                     // Obtain ticket notes and append it in ticketDto!
-                    ITicketNotesDao ticketNotesDao = DaoFactory.getInstance().getTicketNotesDao();
-                    List<DBTicketNotesDao> ticketNotes = ticketNotesDao.getTicketNotesWithParent(ticketNumber);
+                    ITicketNotesRepository ticketNotesDao = RepositoryFactory.getInstance().getTicketNotesRepository();
+                    List<DBTicketNotesVo> ticketNotes = ticketNotesDao.getTicketNotesWithParent(ticketNumber);
                     StringBuilder sb = new StringBuilder();
-                    for (DBTicketNotesDao ticketNote : ticketNotes) {
+                    for (DBTicketNotesVo ticketNote : ticketNotes) {
                         sb.append(ticketNote.getNotes()).append("\n");
                     }
                     Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "Obtain notes: [{0}]", sb);
