@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,6 +22,14 @@ import java.util.logging.Logger;
  */
 public class Commons {
     private static final Gson GSON = new Gson();
+    
+    /**
+     * Creates a random UUID with length 32 characters
+     * @return 
+     */
+    public static String randomUUID() {
+        return UUID.randomUUID().toString().replaceAll("-", "");
+    }
     
     public static boolean isEmptyStr(String s) {
         return s == null || s.equals("");
