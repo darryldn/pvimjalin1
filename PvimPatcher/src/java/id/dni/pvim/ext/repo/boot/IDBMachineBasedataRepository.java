@@ -13,5 +13,5 @@ import id.dni.pvim.ext.repo.IRepository;
  * @author darryl.sulistyan
  */
 public interface IDBMachineBasedataRepository extends IRepository<DBMachineBasedataVo> {
-    
+    // no entries for now.
 }

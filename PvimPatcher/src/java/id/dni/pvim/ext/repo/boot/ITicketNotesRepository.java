@@ -6,7 +6,7 @@
 package id.dni.pvim.ext.repo.boot;
 
 import id.dni.pvim.ext.db.vo.DBTicketNotesVo;
-import id.dni.pvim.ext.db.exception.PvExtPersistenceException;
+import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.repo.IRepository;
 import java.util.List;
 
