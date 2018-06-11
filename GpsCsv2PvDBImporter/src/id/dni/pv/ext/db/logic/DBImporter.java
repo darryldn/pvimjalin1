@@ -12,10 +12,13 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.MapListHandler;
 
 /**
  *
@@ -32,7 +35,8 @@ public class DBImporter {
             SQL_UPDATE_PV_LATITUDE = "update BASEDATA set value=? where id=? and idtype=0 and reference=999916",
             SQL_UPDATE_PV_LONGITUDE= "update BASEDATA set value=? where id=? and idtype=0 and reference=999915",
             SQL_INSERT_PV_LATITUDE = "insert into BASEDATA values(?, 0, 999916, ?)",
-            SQL_INSERT_PV_LONGITUDE= "insert into BASEDATA values(?, 0, 999915, ?)";
+            SQL_INSERT_PV_LONGITUDE= "insert into BASEDATA values(?, 0, 999915, ?)",
+            SQL_ID_EXISTS = "select 1 from DEVICE where deviceid=?";
     
     
     public DBImporter(String connectionUrl, String username, 
@@ -53,11 +57,24 @@ public class DBImporter {
                 
         updated = runner.update(conn, updateSql, value, deviceID);
         if (updated == 0) {
-            updated = runner.update(conn, insertSql, deviceID, value);
-            if (updated == 0) {
+            // check if deviceID exist
+            List<Map<String, Object>> query = runner.query(conn, SQL_ID_EXISTS, 
+                    new MapListHandler(), deviceID);
+            
+            if (query != null && !query.isEmpty()) {
+                // okay, the deviceID exists in PV. Insert the geo data now!
+                updated = runner.update(conn, insertSql, deviceID, value);
+                if (updated == 0) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+                        " - Cannot update device information for {0}", deviceID);
+                }
+                
+            } else {
                 Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
-                        " - Cannot insert device information for {0}", deviceID);
+                        " - No device data in ProView for {0}", deviceID);
+                
             }
+            
         }
         
         return updated;
