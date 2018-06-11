@@ -7,7 +7,7 @@ package id.dni.pvim.ext.repo.db;
 
 import id.dni.pvim.ext.repo.db.spec.ISqlSpecification;
 import id.dni.pvim.ext.db.vo.DBTicketNotesVo;
-import id.dni.pvim.ext.db.exception.PvExtPersistenceException;
+import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.repo.ISpecification;
 import id.dni.pvim.ext.repo.spec.TicketNotesSpecification;
 import id.dni.pvim.ext.repo.spec.TicketNotesWithParentSpecification;
