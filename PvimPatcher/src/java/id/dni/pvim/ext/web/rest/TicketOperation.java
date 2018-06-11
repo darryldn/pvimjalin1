@@ -16,7 +16,7 @@ import com.wn.econnect.inbound.wsi.ticket.TicketDto;
 import id.dni.pvim.ext.conf.PatcherConfig;
 import id.dni.pvim.ext.db.vo.DBTicketNotesVo;
 import id.dni.pvim.ext.repo.boot.RepositoryFactory;
-import id.dni.pvim.ext.db.exception.PvExtPersistenceException;
+import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.err.PVIMErrorCodes;
 import id.dni.pvim.ext.web.in.Commons;
 import id.dni.pvim.ext.web.in.Util;

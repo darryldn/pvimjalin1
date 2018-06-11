@@ -7,7 +7,7 @@ package id.dni.pvim.ext.web.rest;
 
 import id.dni.pvim.ext.db.vo.DBMachineGpsVo;
 import id.dni.pvim.ext.repo.boot.RepositoryFactory;
-import id.dni.pvim.ext.db.exception.PvExtPersistenceException;
+import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.db.vo.DBMachineBasedataVo;
 import id.dni.pvim.ext.err.PVErrorCodes;
 import id.dni.pvim.ext.repo.boot.IDBMachineBasedataRepository;
