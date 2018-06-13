@@ -14,6 +14,8 @@ import javax.ejb.Local;
 @Local
 public interface RequestSenderBeanLocal {
 
-    public void asyncFireAndForget();
+//    public void asyncFireAndForget();
+
+    public void asyncSendTelegramReply(long chatID, String message);
     
 }
