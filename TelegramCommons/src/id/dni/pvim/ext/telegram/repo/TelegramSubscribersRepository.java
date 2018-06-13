@@ -57,4 +57,18 @@ public class TelegramSubscribersRepository implements ITelegramSuscribersReposit
         return tel;
     }
     
+    @Override
+    public TelegramSubscriberVo querySingleResult(ISpecification specification) throws PvExtPersistenceException {
+        List<TelegramSubscriberVo> result = query(specification);
+        if (result.size() == 1) {
+            return result.get(0);
+        }
+        
+        if (result.isEmpty()) {
+            return null;
+        }
+        
+        throw new PvExtPersistenceException("More than one result is available!");
+    }
+    
 }

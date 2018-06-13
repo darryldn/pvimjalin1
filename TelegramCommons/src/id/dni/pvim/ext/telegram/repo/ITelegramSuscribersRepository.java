@@ -6,6 +6,8 @@
 package id.dni.pvim.ext.telegram.repo;
 
 import id.dni.pvim.ext.repo.ICRUDRepository;
+import id.dni.pvim.ext.repo.ISpecification;
+import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
 
 /**
@@ -13,5 +15,7 @@ import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
  * @author darryl.sulistyan
  */
 public interface ITelegramSuscribersRepository extends ICRUDRepository<TelegramSubscriberVo> {
+    
+    public TelegramSubscriberVo querySingleResult(ISpecification specification) throws PvExtPersistenceException;
     
 }
