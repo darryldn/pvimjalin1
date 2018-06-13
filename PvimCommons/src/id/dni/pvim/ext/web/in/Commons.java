@@ -34,6 +34,43 @@ public class Commons {
     public static boolean isEmptyStr(String s) {
         return s == null || s.equals("");
     }
+    
+    /**
+     * Creates ?,?,?,...,?
+     * @param n number of question marks
+     * @return 
+     */
+    public static String concatQuestionMarks(int n) {
+        return stringJoinMultiply(n, "?", ",");
+    }
+    
+    /**
+     * Creates String C,C,C,...,C
+     * @param n is the number of C
+     * @param C a character to multiply
+     * @return if n == 0, empty string.
+     */
+    public static String stringCharJoinMultiply(int n, String C) {
+        return stringJoinMultiply(n, C, ",");
+    }
+    
+    /**
+     * Creates String CsepCsepCsep...C
+     * @param n number of C
+     * @param C 
+     * @param sep separator between Cs.
+     * @return 
+     */
+    public static String stringJoinMultiply(int n, String C, String sep) {
+        StringBuilder sb = new StringBuilder();
+        if (n > 0) {
+            sb.append(C);
+            for (int i=1; i<n; ++i) {
+                sb.append(sep).append(C);
+            }
+        }
+        return sb.toString();
+    }
 
     public static boolean isEmptyStrIgnoreSpaces(String s) {
         return s == null || isEmptyStr(s.trim());
