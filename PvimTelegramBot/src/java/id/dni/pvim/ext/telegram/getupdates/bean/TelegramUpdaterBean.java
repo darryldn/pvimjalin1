@@ -9,7 +9,7 @@ import com.google.gson.Gson;
 import id.dni.pvim.ext.telegram.chatbot.TelegramChatBotBeanLocal;
 import id.dni.pvim.ext.telegram.pojo.TelegramGetUpdatesPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessagePOJO;
-import id.dni.pvim.ext.telegram.web.servlet.TelegramConfig;
+import id.dni.pvim.ext.telegram.commons.config.TelegramConfig;
 import id.dni.pvim.ext.web.in.Commons;
 import java.io.IOException;
 import java.io.InputStream;
