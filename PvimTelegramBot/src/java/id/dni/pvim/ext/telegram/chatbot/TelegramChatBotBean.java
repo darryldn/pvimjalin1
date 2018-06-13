@@ -6,6 +6,7 @@
 package id.dni.pvim.ext.telegram.chatbot;
 
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
+import id.dni.pvim.ext.server.net.RequestSenderBeanLocal;
 import id.dni.pvim.ext.telegram.commons.sender.MessageSender;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessageChatPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessageContentPOJO;
@@ -19,6 +20,9 @@ import id.dni.pvim.ext.web.in.Commons;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 
 /**
@@ -28,6 +32,12 @@ import javax.ejb.Stateless;
 @Stateless
 public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
 
+    @Resource
+    private SessionContext ctx;
+    
+    @EJB
+    private RequestSenderBeanLocal telegramRequestBean;
+    
     private String getUsage() {
         StringBuilder sb = new StringBuilder();
         sb.append("Commands:");
@@ -57,14 +67,17 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
         return a.equals(b);
     }
     
-    private static void sendTelegramMessage(
+    private void sendTelegramMessage(
             long chatID, boolean isSuccess, String successMessage, String failMessage) {
         
+        
         if (isSuccess) {
-            MessageSender.sendMessageAndSwallowLogs(chatID, successMessage);
+            //MessageSender.sendMessageAndSwallowLogs(chatID, successMessage);
+            telegramRequestBean.asyncSendTelegramReply(chatID, successMessage);
 
         } else {
-            MessageSender.sendMessageAndSwallowLogs(chatID, failMessage);
+            //MessageSender.sendMessageAndSwallowLogs(chatID, failMessage);
+            telegramRequestBean.asyncSendTelegramReply(chatID, failMessage);
 
         }
         
@@ -111,6 +124,9 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
                 } else {
                     // TODO: Find the phone number in ProView.
                     // If not registered, send error message saying no phone number found
+                    
+                    
+                    
                     
                     String phoneNum = probablePhoneNum;
                     long chatID = id;
@@ -164,6 +180,7 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
                     } catch (PvExtPersistenceException ex) {
                         Logger.getLogger(TelegramChatBotBean.class.getName()).log(Level.SEVERE, "Database error", ex);
                         MessageSender.sendMessageAndSwallowLogs(id, "Registration failed. Contact system administrator for details");
+                        ctx.setRollbackOnly();
                         
                     }
                 }
