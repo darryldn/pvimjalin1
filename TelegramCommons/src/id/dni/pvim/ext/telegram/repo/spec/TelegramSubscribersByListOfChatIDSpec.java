@@ -13,9 +13,9 @@ import id.dni.pvim.ext.web.in.Commons;
  *
  * @author darryl.sulistyan
  */
-public class TelegramSubscribersListOfPhonesSpec implements ISqlSpecification {
+public class TelegramSubscribersByListOfChatIDSpec implements ISqlSpecification {
 
-    private static final String SQL_FIND_BY_PHONENUM_LIST = 
+    private static final String SQL_SELECT_PREFIX = 
             new StringBuilder()
                     .append("SELECT ").append(TelegramSubscriberVo.FIELD_SUBS_ID).append(", ")
                                       .append(TelegramSubscriberVo.FIELD_CHAT_ID).append(", ")
@@ -23,42 +23,35 @@ public class TelegramSubscribersListOfPhonesSpec implements ISqlSpecification {
                                       .append(TelegramSubscriberVo.FIELD_LASTUPDATE).append(", ")
                                       .append(TelegramSubscriberVo.FIELD_PASSKEY).append(" ")
                     .append("FROM ")  .append(TelegramSubscriberVo.TABLE_NAME).append(" ")
-                    .append("WHERE ") .append(TelegramSubscriberVo.FIELD_PHONE_NUM).append(" in ")
+                    .append("WHERE ") .append(TelegramSubscriberVo.FIELD_CHAT_ID).append(" in ")
             .toString();
     
     private final String sqlQuery;
-    private final String[] phones;
+    private final long[] chatID;
     
-    public TelegramSubscribersListOfPhonesSpec(String[] phones) {
-        
-        this.phones = phones;
-        
-        StringBuilder sb = new StringBuilder();
-        sb.append(SQL_FIND_BY_PHONENUM_LIST);
+    public TelegramSubscribersByListOfChatIDSpec(long[] chatIDs) {
+        this.chatID = chatIDs;
+        StringBuilder sb = new StringBuilder(SQL_SELECT_PREFIX);
         sb.append("(");
-        if (phones != null) {
-            String questionmarks = Commons.concatQuestionMarks(phones.length);
-            sb.append(questionmarks);
+        if (chatIDs != null) {
+            sb.append(Commons.concatQuestionMarks(chatIDs.length));
         }
-//        for (int i=0; phones != null && i<phones.length; ++i) {
-//            sb.append("?,");
-//        }
-//        if (phones != null && phones.length >= 1) {
-//            sb.setLength(sb.length()-1); // remove last ,
-//        }
         sb.append(")");
         this.sqlQuery = sb.toString();
-        
     }
     
     @Override
     public String toParameterizedSqlQuery() {
-        return this.sqlQuery;
+        return sqlQuery;
     }
 
     @Override
     public Object[] getSqlParams() {
-        return (Object[])(phones);
+        Object[] o = new Object[chatID.length];
+        for (int i=0; i<o.length; ++i) {
+            o[i] = chatID[i];
+        }
+        return o;
     }
     
 }
