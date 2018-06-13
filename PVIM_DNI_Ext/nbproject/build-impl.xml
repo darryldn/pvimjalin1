@@ -213,7 +213,15 @@ exists or setup the property manually. For example like this:
             <property location="${build.dir}" name="dist.ear.dir"/>
             <property name="deploy.on.save" value="${build.deploy.on.save}"/>
         </ant>
+        <ant antfile="${project.PvimCommonEjb}/build.xml" inheritall="false" target="dist-ear">
+            <property location="${build.dir}" name="dist.ear.dir"/>
+            <property name="deploy.on.save" value="${build.deploy.on.save}"/>
+        </ant>
         <ant antfile="${project.PvimPatcher}/build.xml" inheritall="false" target="dist-ear">
+            <property location="${build.dir}" name="dist.ear.dir"/>
+            <property name="deploy.on.save" value="${build.deploy.on.save}"/>
+        </ant>
+        <ant antfile="${project.PvimTelegramBot}/build.xml" inheritall="false" target="dist-ear">
             <property location="${build.dir}" name="dist.ear.dir"/>
             <property name="deploy.on.save" value="${build.deploy.on.save}"/>
         </ant>
@@ -231,6 +239,8 @@ exists or setup the property manually. For example like this:
     <target depends="init,deps-jar,pre-pre-compile,pre-compile" name="-do-compile-deps">
         <copyfiles files="${reference.PvimPatcher.dist-ear}" todir="${build.dir}//"/>
         <copyfiles files="${reference.PvSoapMiddleMan.dist-ear}" todir="${build.dir}//"/>
+        <copyfiles files="${reference.PvimTelegramBot.dist-ear}" todir="${build.dir}//"/>
+        <copyfiles files="${reference.PvimCommonEjb.dist-ear}" todir="${build.dir}//"/>
     </target>
     <target name="post-compile">
         <!-- Empty placeholder for easier customization. -->
@@ -308,7 +318,9 @@ exists or setup the property manually. For example like this:
     <target name="-run-deploy-am" unless="no.deps">
         <!-- Task to deploy to the Access Manager runtime. -->
         <ant antfile="${project.PvSoapMiddleMan}/build.xml" inheritall="false" target="-run-deploy-am"/>
+        <ant antfile="${project.PvimCommonEjb}/build.xml" inheritall="false" target="-run-deploy-am"/>
         <ant antfile="${project.PvimPatcher}/build.xml" inheritall="false" target="-run-deploy-am"/>
+        <ant antfile="${project.PvimTelegramBot}/build.xml" inheritall="false" target="-run-deploy-am"/>
     </target>
     <target depends="-init-cos,dist-directory-deploy,pre-run-deploy,-pre-nbmodule-run-deploy,-run-deploy-nb,-init-deploy-ant,-deploy-ant,-run-deploy-am,-post-nbmodule-run-deploy,post-run-deploy" name="run-deploy"/>
     <target if="netbeans.home" name="-run-deploy-nb">
@@ -637,11 +649,19 @@ exists or setup the property manually. For example like this:
             <property location="${build.dir}" name="dist.ear.dir"/>
             <property name="deploy.on.save" value="${build.deploy.on.save}"/>
         </ant>
+        <ant antfile="${project.PvimCommonEjb}/build.xml" inheritall="false" target="clean-ear">
+            <property location="${build.dir}" name="dist.ear.dir"/>
+            <property name="deploy.on.save" value="${build.deploy.on.save}"/>
+        </ant>
         <ant antfile="${project.PvimCommons}/build.xml" inheritall="false" target="clean">
             <property location="${build.dir}" name="dist.ear.dir"/>
             <property name="deploy.on.save" value="${build.deploy.on.save}"/>
         </ant>
         <ant antfile="${project.PvimPatcher}/build.xml" inheritall="false" target="clean-ear">
+            <property location="${build.dir}" name="dist.ear.dir"/>
+            <property name="deploy.on.save" value="${build.deploy.on.save}"/>
+        </ant>
+        <ant antfile="${project.PvimTelegramBot}/build.xml" inheritall="false" target="clean-ear">
             <property location="${build.dir}" name="dist.ear.dir"/>
             <property name="deploy.on.save" value="${build.deploy.on.save}"/>
         </ant>
