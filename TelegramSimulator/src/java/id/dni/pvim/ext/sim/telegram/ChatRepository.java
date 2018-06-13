@@ -54,12 +54,12 @@ class ChatRepository {
         return ME;
     }
     
-    public void addChat(long chatID, String text) {
+    public synchronized void addChat(long chatID, String text) {
         repos.add(new Chat(chatID, text));
     }
     
     public List<Chat> getChats() {
-        return Collections.unmodifiableList(repos);
+        return repos;
     }
     
     public void clearChat() {

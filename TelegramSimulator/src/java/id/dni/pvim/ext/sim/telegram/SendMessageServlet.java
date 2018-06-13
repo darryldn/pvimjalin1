@@ -38,6 +38,10 @@ public class SendMessageServlet extends HttpServlet {
             
             String path = request.getQueryString();
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - Haiya, receive sendMessage: {0}", path);
+            try {
+                Thread.sleep(3000); // simulate wait 3 seconds
+            } catch (InterruptedException ex) {
+            }
             
             out.write("{'ok' : true}");
         }
