@@ -10,7 +10,7 @@ import id.dni.pvim.ext.telegram.pojo.TelegramGetUpdatesPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessageChatPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessageContentPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessageFromPOJO;
-import id.dni.pvim.ext.telegram.pojo.TelegramMessagePOJO;
+import id.dni.pvim.ext.telegram.pojo.TelegramUpdateObjPOJO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public class GetUpdatesServlet extends HttpServlet {
             getUpdates.setResult(new ArrayList<>());
             
             for (Chat chat : chats) {
-                TelegramMessagePOJO m = new TelegramMessagePOJO();
+                TelegramUpdateObjPOJO m = new TelegramUpdateObjPOJO();
                 m.setUpdate_id(10);
                 
                 TelegramMessageContentPOJO c = new TelegramMessageContentPOJO();
