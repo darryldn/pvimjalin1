@@ -35,7 +35,7 @@ public class TelegramUpdateObjPOJO {
 
     @Override
     public String toString() {
-        return "TelegramMessagePOJO{" + "update_id=" + update_id + ", message=" + message + '}';
+        return "TelegramUpdateObjPOJO{" + "update_id=" + update_id + ", message=" + message + '}';
     }
     
     
