@@ -7,7 +7,6 @@ package id.dni.pvim.ext.telegram.getupdates.bean;
 
 import com.google.gson.Gson;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
-import id.dni.pvim.ext.telegram.chatbot.TelegramChatBotBean;
 import id.dni.pvim.ext.telegram.chatbot.TelegramChatBotBeanLocal;
 import id.dni.pvim.ext.telegram.pojo.TelegramGetUpdatesPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramUpdateObjPOJO;
