@@ -6,6 +6,7 @@
 package id.dni.pvim.ext.web;
 
 import com.google.gson.Gson;
+import com.wn.econnect.inbound.wsi.ticket.ITicketWebService;
 import id.dni.pvim.ext.web.in.Commons;
 import id.dni.pvim.ext.web.in.Util;
 import id.dni.pvim.ext.web.rest.PVIMGetOpenTicketsByMachineNumberRequest;
@@ -22,6 +23,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.ws.WebServiceRef;
 
 /**
  *
@@ -29,8 +31,9 @@ import javax.servlet.http.HttpServletResponse;
  */
 @WebServlet(name = "TicketServlet", urlPatterns = {"/ticket/*"})
 public class TicketServlet extends HttpServlet {
-
     
+    @WebServiceRef(wsdlLocation = "WEB-INF/wsdl/TicketService.wsdl")
+    private ITicketWebService service;
     
     private static Gson GSON = new Gson();
     
@@ -72,7 +75,7 @@ public class TicketServlet extends HttpServlet {
             // only do this ONCE!
             InputStream in = request.getInputStream();
             String input = Util.inputStreamToString(in);
-            TicketOperation oper = new TicketOperation();
+            TicketOperation oper = new TicketOperation(this.service);
             
             switch (requestOperation) {
                 case "getTicketByNumber": {

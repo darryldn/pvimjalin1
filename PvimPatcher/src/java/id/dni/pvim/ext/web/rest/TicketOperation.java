@@ -23,7 +23,7 @@ import id.dni.pvim.ext.web.in.Util;
 import id.dni.pvim.ext.web.soap.BindingProviderUtil;
 import id.dni.pvim.ext.web.soap.PVIMSoapHeaderHandler;
 import id.dni.pvim.ext.web.soap.PVIMTicketState;
-import id.dni.pvim.ext.web.soap.PVIMWSServiceRegistry;
+//import id.dni.pvim.ext.web.soap.PVIMWSServiceRegistry;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -60,8 +60,10 @@ public class TicketOperation {
         return resp;
     }
     
-    public TicketOperation() {
-        
+    private final ITicketWebService service;
+    
+    public TicketOperation(ITicketWebService service) {
+        this.service = service;
     }
     
     private PVIMUpdateTicketResponse updateTicketWithStateAndNoteMandatory(
@@ -138,7 +140,7 @@ public class TicketOperation {
         PVIMAuthToken auth = request.getAuth();
         PVIMGetTicketByNumberResponse resp = new PVIMGetTicketByNumberResponse();
         
-        Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "ticketNumber: {0} auth: {1}", 
+        Logger.getLogger(TicketOperation.class.getName()).log(Level.FINEST, "ticketNumber: {0} auth: {1}", 
                 new Object[]{ticketNumber, auth});
         
         try {
@@ -146,7 +148,7 @@ public class TicketOperation {
             if (ticketDto != null) {
                 JAXBElement<String> jaxbNotes = ticketDto.getNote();
                 if (jaxbNotes == null || Commons.isEmptyStrIgnoreSpaces(jaxbNotes.getValue())) {
-                    Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "No notes given. Read from database!");
+                    Logger.getLogger(TicketOperation.class.getName()).log(Level.FINEST, "No notes given. Read from database!");
                     
                     // Obtain ticket notes and append it in ticketDto!
                     ITicketNotesRepository ticketNotesDao = RepositoryFactory.getInstance().getTicketNotesRepository();
@@ -155,7 +157,7 @@ public class TicketOperation {
                     for (DBTicketNotesVo ticketNote : ticketNotes) {
                         sb.append(ticketNote.getNotes()).append("\n");
                     }
-                    Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "Obtain notes: [{0}]", sb);
+                    Logger.getLogger(TicketOperation.class.getName()).log(Level.FINEST, "Obtain notes: [{0}]", sb);
                     
                     ObjectFactory objFactory = new ObjectFactory();
                     JAXBElement<String> xnote = objFactory.createTicketDtoNote(sb.toString()); 
@@ -223,7 +225,7 @@ public class TicketOperation {
     }
     
     private ITicketWebServicePortType getWebServicePort(PVIMAuthToken auth) {
-        ITicketWebService service = PVIMWSServiceRegistry.getInstance().getTicketWebService();
+        //ITicketWebService service = PVIMWSServiceRegistry.getInstance().getTicketWebService();
         ITicketWebServicePortType port = service.getITicketWebServiceHttpPort();
         modifyPortService((BindingProvider)port, auth);
         return port;
