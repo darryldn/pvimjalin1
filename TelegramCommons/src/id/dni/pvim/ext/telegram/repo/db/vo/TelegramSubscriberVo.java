@@ -145,11 +145,10 @@ public class TelegramSubscriberVo implements ITableDescriptorVo {
         tbl.get(FIELD_PASSKEY).setValue(passkey);
     }
 
-    
-
-    
-    
-    
+    @Override
+    public String toString() {
+        return "TelegramSubscriberVo{" + "subs_id=" + subs_id + ", chat_id=" + chat_id + ", phone_num=" + phone_num + ", lastupdate=" + lastupdate + ", passkey=" + passkey + '}';
+    }
     
     
 }
