@@ -11,7 +11,7 @@ import java.util.List;
  *{
 	"ok": true,
 	"result": [{
-          @see TelegramMessagePOJO class
+          @see TelegramUpdateObjPOJO class
         }]
 }
  * @author darryl
@@ -19,7 +19,7 @@ import java.util.List;
 public class TelegramGetUpdatesPOJO {
     
     private boolean ok;
-    private List<TelegramMessagePOJO> result;
+    private List<TelegramUpdateObjPOJO> result;
     
     public boolean getOk() {
         return ok;
@@ -29,11 +29,11 @@ public class TelegramGetUpdatesPOJO {
         this.ok = ok;
     }
 
-    public List<TelegramMessagePOJO> getResult() {
+    public List<TelegramUpdateObjPOJO> getResult() {
         return result;
     }
 
-    public void setResult(List<TelegramMessagePOJO> result) {
+    public void setResult(List<TelegramUpdateObjPOJO> result) {
         this.result = result;
     }
 
