@@ -5,7 +5,7 @@
  */
 package id.dni.pvim.ext.telegram.chatbot;
 
-import id.dni.pvim.ext.telegram.pojo.TelegramMessagePOJO;
+import id.dni.pvim.ext.telegram.pojo.TelegramUpdateObjPOJO;
 import javax.ejb.Local;
 
 /**
@@ -15,6 +15,6 @@ import javax.ejb.Local;
 @Local
 public interface TelegramChatBotBeanLocal {
 
-    public void consume(TelegramMessagePOJO message);
+    public void consume(TelegramUpdateObjPOJO message);
     
 }
