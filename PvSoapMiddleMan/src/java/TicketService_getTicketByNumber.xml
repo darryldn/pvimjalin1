@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tic="http://ticket.wsi.inbound.econnect.wn.com">
+    <soapenv:Header>
+        <wn:AuthenticationToken xmlns:wn="http://wsi.inbound.econnect.wn.com">
+            <wn:Accountname><![CDATA[[#auth.USERNAME#]]]></wn:Accountname>
+            <wn:Password><![CDATA[[#auth.PASSWORD#]]]></wn:Password>
+        </wn:AuthenticationToken>
+    </soapenv:Header>
+    <soapenv:Body>
+        <tic:getTicketByNumber>
+            <tic:in0><![CDATA[[#ticketNumber#]]]></tic:in0>
+        </tic:getTicketByNumber>
+    </soapenv:Body>
+</soapenv:Envelope>

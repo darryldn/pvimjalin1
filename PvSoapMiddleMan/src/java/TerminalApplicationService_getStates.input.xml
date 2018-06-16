@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ter="http://soap.wincor-nixdorf.com/itmp/TerminalApplicationService">
     <soapenv:Header>
-   	<n0:Security xmlns:n0="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1">
-      <n0:UsernameToken xmlns:n1="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" n1:Id="UsernameToken-14050342">
-        <n0:Username><![CDATA[[#auth.USERNAME#]]]></n0:Username>
-        <n0:Password n0:Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText"><![CDATA[[#auth.PASSWORD#]]]></n0:Password>
-      </n0:UsernameToken>
-    </n0:Security>
-   </soapenv:Header>
-   <soapenv:Body>
-      <ter:getStates soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-         <terminalID xsi:type="xsd:string"><![CDATA[[#terminalID#]]]></terminalID>
-      </ter:getStates>
-   </soapenv:Body>
+        <n0:Security xmlns:n0="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" soapenv:mustUnderstand="1">
+            <n0:UsernameToken xmlns:n1="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" n1:Id="UsernameToken-14050342">
+                <n0:Username><![CDATA[[#auth.USERNAME#]]]></n0:Username>
+                <n0:Password n0:Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText"><![CDATA[[#auth.PASSWORD#]]]></n0:Password>
+            </n0:UsernameToken>
+        </n0:Security>
+    </soapenv:Header>
+    <soapenv:Body>
+        <ter:getStates soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+            <terminalID xsi:type="xsd:string"><![CDATA[[#terminalID#]]]></terminalID>
+        </ter:getStates>
+    </soapenv:Body>
 </soapenv:Envelope>
