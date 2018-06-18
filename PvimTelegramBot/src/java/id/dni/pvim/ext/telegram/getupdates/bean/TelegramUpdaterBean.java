@@ -23,9 +23,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerService;
@@ -37,6 +39,7 @@ import javax.ejb.TimerService;
  * @author darryl
  */
 @Singleton
+@Startup
 public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
 
     @Resource
@@ -47,8 +50,9 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
 
     private static final String TIMER_NAME = "@id.dni.pvim.ext.telegram.web.servlet.TelegramUpdaterBean#TIMER";
 
-    @Override
-    public void init() {
+//    @Override
+    @PostConstruct
+    private void init() {
 
         int lk = 0;
 
@@ -78,7 +82,7 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
 
     @Timeout
     private void getUpdates(Timer timer) {
-        Logger.getLogger(this.getClass().getName()).log(Level.FINEST,
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO,
                 " - timer executed {0}", timer.getInfo());
 
         // 1. Send request

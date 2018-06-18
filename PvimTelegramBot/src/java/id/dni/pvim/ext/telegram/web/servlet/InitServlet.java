@@ -5,8 +5,6 @@
  */
 package id.dni.pvim.ext.telegram.web.servlet;
 
-import id.dni.pvim.ext.telegram.getupdates.bean.TelegramUpdaterBeanLocal;
-import javax.ejb.EJB;
 import javax.servlet.http.HttpServlet;
 
 /**
@@ -15,15 +13,15 @@ import javax.servlet.http.HttpServlet;
  */
 public class InitServlet extends HttpServlet {
 
-    @EJB
-    private TelegramUpdaterBeanLocal updaterBean;
+//    @EJB
+//    private TelegramUpdaterBeanLocal updaterBean;
     
 //    @EJB
 //    private TelegramNotificationBeanLocal notifierBean;
     
     @Override
     public void init() {
-        updaterBean.init();
+//        updaterBean.init();
 //        notifierBean.init();
     }
     
