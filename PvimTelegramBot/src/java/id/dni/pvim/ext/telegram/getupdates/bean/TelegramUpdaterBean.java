@@ -83,6 +83,11 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
 
     @Timeout
     private void getUpdates(Timer timer) {
+        // This thing WILL THROW EXCEPTION
+        // first time after server is restarted with message: Timer is cancelled
+        // because it is cancelled in @PostConstruct method above. Ignore the exception. It is harmless
+        // This is because the timer is set persistent = true (default behavior). The timer persists
+        // even after server shutdown / restart.
         Logger.getLogger(this.getClass().getName()).log(Level.INFO,
                 " - timer executed {0}", timer.getInfo());
 
