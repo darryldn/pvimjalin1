@@ -74,6 +74,21 @@ public class TelegramConfig {
     }
     
     /**
+     * Allow forgetting previous messages. Any message that has update_id &lt;= updateOffset
+     * will not be returned by Telegram server.
+     * 
+     * The problem is that Telegram server will recalculate the updateOffset when
+     * there's no chat in 1 week or more.
+     * @param updateOffset
+     * @return 
+     */
+    public static String getGetUpdatesUrl(long updateOffset) {
+        String botApiKey = getBotApiKey();
+        String baseurl = getTelegramBotApiBaseUrl();
+        return baseurl + botApiKey + "/getUpdates?offset=" + updateOffset;
+    }
+    
+    /**
      * Obtains the request url to sendMessage to telegram bot.
      * @param chatID
      * @param content encoded automatically using UTF-8
