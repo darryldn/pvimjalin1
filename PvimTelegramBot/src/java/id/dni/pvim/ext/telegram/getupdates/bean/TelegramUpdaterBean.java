@@ -6,14 +6,11 @@
 package id.dni.pvim.ext.telegram.getupdates.bean;
 
 import com.google.gson.Gson;
-import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.telegram.chatbot.TelegramChatBotBeanLocal;
 import id.dni.pvim.ext.telegram.pojo.TelegramGetUpdatesPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramUpdateObjPOJO;
 import id.dni.pvim.ext.telegram.commons.config.TelegramConfig;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessageContentPOJO;
-import id.dni.pvim.ext.telegram.repo.ITelegramSuscribersRepository;
-import id.dni.pvim.ext.telegram.repo.TelegramSubscribersRepository;
 import id.dni.pvim.ext.web.in.Commons;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +44,10 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
 
     @EJB
     private TelegramChatBotBeanLocal chatbot;
+
+    private long lastOffset = 0;
+    private boolean useOffset = false;
+    //private final ITelegramSuscribersRepository subscriberRepo = new TelegramSubscribersRepository();
 
     private static final String TIMER_NAME = "@id.dni.pvim.ext.telegram.web.servlet.TelegramUpdaterBean#TIMER";
 
@@ -86,8 +87,16 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
                 " - timer executed {0}", timer.getInfo());
 
         // 1. Send request
-        String urlStr = TelegramConfig.getGetUpdatesUrl();
+        String urlStr;// = TelegramConfig.getGetUpdatesUrl();
+        if (useOffset) {
+            urlStr = TelegramConfig.getGetUpdatesUrl(lastOffset);
+        } else {
+            urlStr = TelegramConfig.getGetUpdatesUrl();
+        }
+
         try {
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - urlStr = {0}", urlStr);
+            
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
@@ -103,59 +112,69 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
                 returnData = Commons.inputStreamToString(inputStream);
             }
 
-            Logger.getLogger(this.getClass().getName()).log(Level.FINEST,
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO,
                     " - obtain request result from telegram: {0}", returnData);
 
             // 3. Pass object to TelegramChatBot
             Gson gson = new Gson();
             TelegramGetUpdatesPOJO pojo = gson.fromJson(returnData, TelegramGetUpdatesPOJO.class);
             if (pojo != null && pojo.getOk()) {
-                for (TelegramUpdateObjPOJO updateObj : pojo.getResult()) {
+                if (pojo.getResult() == null || pojo.getResult().isEmpty()) {
+                    useOffset = false;
                     
-                    if (updateObj == null) {
-                        continue;
-                    }
+                } else {
+                    useOffset = true;
+                    for (TelegramUpdateObjPOJO updateObj : pojo.getResult()) {
 
-                    TelegramMessageContentPOJO content = updateObj.getMessage();
-                    if (content == null) {
-                        continue;
-                    }
-
-                    // check last update date from subscribers table
-                    long latestLastupdated;
-                    {
-                        ITelegramSuscribersRepository repo = new TelegramSubscribersRepository();
-                        try {
-                            latestLastupdated = repo.queryLatestLastprocessedTimestamp();
-                            long chatDate = content.getDate() * 1000;
-                            if (latestLastupdated >= chatDate) { // chat with chatDate is already processed
-                                Logger.getLogger(this.getClass().getName()).log(Level.FINEST,
-                                        "ignore update_id {0}", updateObj.getUpdate_id());
-                                continue;
-                            }
-                        } catch (PvExtPersistenceException ex) {
-                            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+                        if (updateObj == null) {
                             continue;
                         }
+
+                        TelegramMessageContentPOJO content = updateObj.getMessage();
+                        if (content == null) {
+                            continue;
+                        }
+
+                        lastOffset = updateObj.getUpdate_id();
+
+                        // check last update date from subscribers table
+//                        long latestLastupdated;
+//                        {
+//                            ITelegramSuscribersRepository repo = subscriberRepo;
+//                            try {
+//                                latestLastupdated = repo.queryLatestLastprocessedTimestamp();
+//                                long chatDate = content.getDate() * 1000;
+//                                if (latestLastupdated >= chatDate) { // chat with chatDate is already processed
+//                                    Logger.getLogger(this.getClass().getName()).log(Level.FINEST,
+//                                            "ignore update_id {0}", updateObj.getUpdate_id());
+//                                    continue;
+//                                }
+//                            } catch (PvExtPersistenceException ex) {
+//                                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+//                                continue;
+//                            }
+//                        }
+
+                        // date is in seconds precision.
+                        // since it is very rare that a person can type two messages in one second
+                        // except using hacks via url directly of course!
+                        // because F*CK EM!
+//                        long chatDate = content.getDate();
+//                        chatDate *= 1000; // transform to ms
+//                        try {
+//                            ITelegramSuscribersRepository repos = subscriberRepo;
+//                            repos.setLatestLastprocessedTimestamp(chatDate); // failed or not, update last processed!
+//
+//                        } catch (PvExtPersistenceException ex) {
+//                            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+//                            continue;
+//
+//                        }
+
+                        chatbot.consume(updateObj);
                     }
-
-                    // date is in seconds precision.
-                    // since it is very rare that a person can type two messages in one second
-                    // except using hacks via url directly of course!
-                    // because F*CK EM!
-                    long chatDate = content.getDate();
-                    chatDate *= 1000; // transform to ms
-                    try {
-                        ITelegramSuscribersRepository repos = new TelegramSubscribersRepository();
-                        repos.setLatestLastprocessedTimestamp(chatDate); // failed or not, update last processed!
-
-                    } catch (PvExtPersistenceException ex) {
-                        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
-                        continue;
-
-                    }
-                    
-                    chatbot.consume(updateObj);
+                    lastOffset += 1; // Telegram grabs update id >= lastOffset
+                                     // so add one to skip it!
                 }
             }
 
