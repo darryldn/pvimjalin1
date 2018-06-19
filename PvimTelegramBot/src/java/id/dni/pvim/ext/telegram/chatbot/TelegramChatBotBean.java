@@ -38,12 +38,16 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
 
     @EJB
     private RequestSenderBeanLocal telegramRequestBean;
+    
+    private final ITelegramSuscribersRepository subscriberRepo = new TelegramSubscribersRepository();
+    private final ISlmUserRepository slmUserRepo = new SlmUserRepository();
 
     private String getUsage() {
         StringBuilder sb = new StringBuilder();
         sb.append("Commands:");
         sb.append("/help: Print this text");
-        sb.append("/reg phone-number: Register your phone number for notifications");
+        sb.append("/reg mobile-number: Register your phone number for notifications");
+        sb.append("/unreg: Unregister phone number");
         return sb.toString();
     }
 
@@ -132,20 +136,25 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
                         // Find the phone number in ProViewIM.
                         // If not registered, send error updateObj saying no phone number found
                         boolean isMobileExist;
-                        ISlmUserRepository userRepo = new SlmUserRepository();
+                        ISlmUserRepository userRepo = slmUserRepo;
                         isMobileExist = userRepo.isMobileExist(probablePhoneNum);
 
                         if (isMobileExist) {
 
                             String phoneNum = probablePhoneNum;
                             long chatID = id;
-                            ITelegramSuscribersRepository repos = new TelegramSubscribersRepository();
+                            ITelegramSuscribersRepository repos = subscriberRepo;
 
                             // modify the code to enforce 1-1 relationship between phone num and chat id
                             TelegramSubscriberVo existingPhone = repos.querySingleResult(
                                     new TelegramSubscribersPhoneNumSpecification(phoneNum));
                             if (existingPhone != null) {
-                                if (chatID != existingPhone.getChat_id() && chatDate > existingPhone.getLastupdate()) {
+                                if (chatID != existingPhone.getChat_id()/* && chatDate > existingPhone.getLastupdate()*/) {
+                                    // this shouldn't happen because Telegram also
+                                    // associates mobile number with chat id
+                                    // Different machine with same mobile with obtain same chat id as well
+                                    // from Telegram.
+                                    
                                     // new ChatID is found with same phone number. Update entry in DB
                                     existingPhone.setChat_id(chatID);
                                     existingPhone.setLastupdate(chatDate);
@@ -160,7 +169,7 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
                                 existingPhone = repos.querySingleResult(
                                         new TelegramSubscribersByChatIDSpec(chatID));
                                 if (existingPhone != null) {
-                                    if (!eq(existingPhone.getPhone_num(), phoneNum) && chatDate > existingPhone.getLastupdate()) {
+                                    if (!eq(existingPhone.getPhone_num(), phoneNum)/* && chatDate > existingPhone.getLastupdate()*/) {
                                         // new phone Number for existing chatID. Update entry in DB
                                         existingPhone.setPhone_num(phoneNum);
                                         existingPhone.setLastupdate(chatDate);
@@ -219,7 +228,7 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
                 } else if ("/unreg".equals(cmd)) {
                     
                     try {
-                        ITelegramSuscribersRepository repo = new TelegramSubscribersRepository();
+                        ITelegramSuscribersRepository repo = subscriberRepo;
                         TelegramSubscriberVo subs = repo.querySingleResult(new TelegramSubscribersByChatIDSpec(id));
                         if (subs != null) {
                             boolean isSuccess = repo.delete(subs);
