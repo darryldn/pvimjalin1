@@ -93,12 +93,12 @@ class TelegramSubscribersRepositorySim implements ITelegramSuscribersRepository 
         return Collections.EMPTY_LIST;
     }
 
-    @Override
+//    @Override
     public long queryLatestLastprocessedTimestamp() throws PvExtPersistenceException {
         return latestLastupdated;
     }
 
-    @Override
+//    @Override
     public void setLatestLastprocessedTimestamp(long lastupdated) throws PvExtPersistenceException {
         if (lastupdated > latestLastupdated) {
             latestLastupdated = lastupdated;

@@ -11,10 +11,7 @@ import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
 import id.dni.pvim.ext.repo.db.vo.ITableVoFactory;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.repo.impl.GenericSqlRepository;
-import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberParameterVo;
 import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
-import id.dni.pvim.ext.telegram.repo.spec.TelegramSubscribersParameterSpec;
-//import id.dni.pvim.ext.telegram.repo.sim.TelegramSubscribersRepositorySim;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,10 +23,8 @@ public class TelegramSubscribersRepository implements ITelegramSuscribersReposit
     
     private final GenericSqlRepository repo;
     
-    private static final String PAR_NAME_LATEST_LASTPROCESSED = "LATEST_LASTPROCESSED";
-    private final ITelegramSubscribersParameterRepository parameterRepo;
-    
-    //private final TelegramSubscribersRepositorySim sim;
+//    private static final String PAR_NAME_LATEST_LASTPROCESSED = "LATEST_LASTPROCESSED";
+//    private final ITelegramSubscribersParameterRepository parameterRepo;
     
     public TelegramSubscribersRepository() {
         repo = new GenericSqlRepository(PVIMDBConnectionFactory.getInstance().getDataSource(), new ITableVoFactory() {
@@ -38,7 +33,7 @@ public class TelegramSubscribersRepository implements ITelegramSuscribersReposit
                 return new TelegramSubscriberVo();
             }
         });
-        parameterRepo = new TelegramSubscribersParameterRepository();
+//        parameterRepo = new TelegramSubscribersParameterRepository();
         //repo = null;
         //sim = new TelegramSubscribersRepositorySim();
     }
@@ -47,7 +42,7 @@ public class TelegramSubscribersRepository implements ITelegramSuscribersReposit
     public boolean insert(TelegramSubscriberVo obj) throws PvExtPersistenceException {
         // don't care whether insert is successful or not, the chat IS ALREADY processed
         // by this time. If insert errors, the user MUST send the chat again!
-        setLatestLastprocessedTimestamp(obj.getLastupdate());
+//        setLatestLastprocessedTimestamp(obj.getLastupdate());
         return repo.insert(obj);
 //        return sim.insert(obj);
     }
@@ -55,7 +50,7 @@ public class TelegramSubscribersRepository implements ITelegramSuscribersReposit
     @Override
     public boolean delete(TelegramSubscriberVo obj) throws PvExtPersistenceException {
         // ditto insert
-        setLatestLastprocessedTimestamp(obj.getLastupdate());
+//        setLatestLastprocessedTimestamp(obj.getLastupdate());
         return repo.delete(obj);
 //        return sim.delete(obj);
     }
@@ -63,7 +58,7 @@ public class TelegramSubscribersRepository implements ITelegramSuscribersReposit
     @Override
     public boolean update(TelegramSubscriberVo obj) throws PvExtPersistenceException {
         // ditto insert
-        setLatestLastprocessedTimestamp(obj.getLastupdate());
+//        setLatestLastprocessedTimestamp(obj.getLastupdate());
         return repo.update(obj);
 //        return sim.update(obj);
     }
@@ -94,46 +89,46 @@ public class TelegramSubscribersRepository implements ITelegramSuscribersReposit
 //        return sim.querySingleResult(specification);
     }
     
-    private TelegramSubscriberParameterVo getLatestLastProcessed() throws PvExtPersistenceException {
-        
-        List<TelegramSubscriberParameterVo> query = 
-                parameterRepo.query(new TelegramSubscribersParameterSpec(PAR_NAME_LATEST_LASTPROCESSED));
-        if (query == null || query.isEmpty()) {
-            return null;
-        }
-        
-        if (query.size() != 1) {
-            throw new PvExtPersistenceException("More than one result for " + PAR_NAME_LATEST_LASTPROCESSED);
-        }
-        
-        return query.get(0);
-    }
+//    private TelegramSubscriberParameterVo getLatestLastProcessed() throws PvExtPersistenceException {
+//        
+//        List<TelegramSubscriberParameterVo> query = 
+//                parameterRepo.query(new TelegramSubscribersParameterSpec(PAR_NAME_LATEST_LASTPROCESSED));
+//        if (query == null || query.isEmpty()) {
+//            return null;
+//        }
+//        
+//        if (query.size() != 1) {
+//            throw new PvExtPersistenceException("More than one result for " + PAR_NAME_LATEST_LASTPROCESSED);
+//        }
+//        
+//        return query.get(0);
+//    }
 
-    @Override
-    public long queryLatestLastprocessedTimestamp() throws PvExtPersistenceException {
-        
-        TelegramSubscriberParameterVo q = getLatestLastProcessed();
-        if (q != null) {
-            return Long.parseLong(q.getParValue());
-        } else {
-            return 0;
-        }
-    }
-
-    @Override
-    public void setLatestLastprocessedTimestamp(long lastupdated) throws PvExtPersistenceException {
-        
-        TelegramSubscriberParameterVo q = getLatestLastProcessed();
-        if (q != null) {
-            q.setParValue("" + lastupdated);
-            parameterRepo.update(q);
-        } else {
-            q = new TelegramSubscriberParameterVo();
-            q.setParName(PAR_NAME_LATEST_LASTPROCESSED);
-            q.setParValue("" + lastupdated);
-            q.setToCurrentTimestamp();
-            parameterRepo.insert(q);
-        }
-    }
+//    @Override
+//    public long queryLatestLastprocessedTimestamp() throws PvExtPersistenceException {
+//        
+//        TelegramSubscriberParameterVo q = getLatestLastProcessed();
+//        if (q != null) {
+//            return Long.parseLong(q.getParValue());
+//        } else {
+//            return 0;
+//        }
+//    }
+//
+////    @Override
+//    public void setLatestLastprocessedTimestamp(long lastupdated) throws PvExtPersistenceException {
+//        
+//        TelegramSubscriberParameterVo q = getLatestLastProcessed();
+//        if (q != null) {
+//            q.setParValue("" + lastupdated);
+//            parameterRepo.update(q);
+//        } else {
+//            q = new TelegramSubscriberParameterVo();
+//            q.setParName(PAR_NAME_LATEST_LASTPROCESSED);
+//            q.setParValue("" + lastupdated);
+//            q.setToCurrentTimestamp();
+//            parameterRepo.insert(q);
+//        }
+//    }
     
 }

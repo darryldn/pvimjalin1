@@ -18,8 +18,8 @@ public interface ITelegramSuscribersRepository extends ICRUDRepository<TelegramS
     
     public TelegramSubscriberVo querySingleResult(ISpecification specification) throws PvExtPersistenceException;
     
-    public long queryLatestLastprocessedTimestamp() throws PvExtPersistenceException;
+//    public long queryLatestLastprocessedTimestamp() throws PvExtPersistenceException;
     
-    public void setLatestLastprocessedTimestamp(long lastupdated) throws PvExtPersistenceException;
+//    public void setLatestLastprocessedTimestamp(long lastupdated) throws PvExtPersistenceException;
     
 }
