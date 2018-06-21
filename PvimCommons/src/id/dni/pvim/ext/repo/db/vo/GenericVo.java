@@ -7,6 +7,8 @@ package id.dni.pvim.ext.repo.db.vo;
 
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -16,8 +18,18 @@ public abstract class GenericVo implements ITableDescriptorVo {
 
     @Override
     public void fillDataFromMap(Map<String, Object> fromDB) throws PvExtPersistenceException {
-        for (Map.Entry<String, Object> k : fromDB.entrySet()) {
-            this.getFieldDescriptor().get(k.getKey()).setValue(k.getValue());
+        if (this.getFieldDescriptor() != null) {
+            for (Map.Entry<String, Object> k : fromDB.entrySet()) {
+                FieldData fd = this.getFieldDescriptor().get(k.getKey());
+                if (fd != null) {
+                    fd.setValue(k.getValue());
+                } else {
+                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+                            " - FieldData associated with key: {0} does not exist in tableDescriptor", k.getKey());
+                }
+            }
+        } else {
+            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, " - fillDataFromMap, getFieldDescriptor returns null!");
         }
     }
     
