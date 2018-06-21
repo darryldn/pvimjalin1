@@ -6,12 +6,13 @@
 package id.dni.pvim.ext.sim.telegram;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 class Chat {
     private long chatID;
     private String text;
+    private long updateID;
+    private long date;
 
     public Chat(long chatID, String text) {
         this.chatID = chatID;
@@ -33,6 +34,23 @@ class Chat {
     public void setText(String text) {
         this.text = text;
     }
+
+    public long getUpdateID() {
+        return updateID;
+    }
+
+    public void setUpdateID(long updateID) {
+        this.updateID = updateID;
+    }
+
+    public long getDate() {
+        return date;
+    }
+
+    public void setDate(long date) {
+        this.date = date;
+    }
+    
     
     
 }
@@ -44,10 +62,12 @@ class Chat {
 class ChatRepository {
  
     private static final ChatRepository ME = new ChatRepository();
+    private long lastChatUpdateID;
     private final List<Chat> repos;
     
     private ChatRepository() {
         repos = new ArrayList<>();
+        lastChatUpdateID = 1;
     }
     
     public static ChatRepository getInstance() {
@@ -55,7 +75,10 @@ class ChatRepository {
     }
     
     public synchronized void addChat(long chatID, String text) {
-        repos.add(new Chat(chatID, text));
+        Chat n = new Chat(chatID, text);
+        n.setUpdateID(lastChatUpdateID++);
+        n.setDate(System.currentTimeMillis());
+        repos.add(n);
     }
     
     public List<Chat> getChats() {

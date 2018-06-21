@@ -42,40 +42,56 @@ public class GetUpdatesServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             
+            long offset;
+            try {
+                offset = Long.parseLong(request.getParameter("offset"));
+            } catch (Exception ex) {
+                offset = 0;
+            }
+            
             List<Chat> chats = ChatRepository.getInstance().getChats();
+            List<Chat> newChat = new ArrayList<>();
+            
             TelegramGetUpdatesPOJO getUpdates = new TelegramGetUpdatesPOJO();
             getUpdates.setOk(true);
             getUpdates.setResult(new ArrayList<>());
             
             for (Chat chat : chats) {
-                TelegramUpdateObjPOJO m = new TelegramUpdateObjPOJO();
-                m.setUpdate_id(10);
-                
-                TelegramMessageContentPOJO c = new TelegramMessageContentPOJO();
-                c.setMessage_id(60);
-                c.setDate(System.currentTimeMillis());
-                c.setText(chat.getText());
-                
-                TelegramMessageChatPOJO pc = new TelegramMessageChatPOJO();
-                pc.setFirst_name("whatever");
-                pc.setLast_name("whatever 2");
-                pc.setType("private");
-                pc.setId(chat.getChatID());
-                
-                TelegramMessageFromPOJO mf = new TelegramMessageFromPOJO();
-                mf.setFirst_name("whatever");
-                mf.setLast_name("whatever 2");
-                mf.setId(chat.getChatID());
-                mf.setIs_bot(false);
-                mf.setLanguage_code("en-us");
-                
-                c.setChat(pc);
-                c.setFrom(mf);
-                
-                m.setMessage(c);
-                
-                getUpdates.getResult().add(m);
+                long updateID = chat.getUpdateID();
+                if (updateID >= offset) {
+                    TelegramUpdateObjPOJO m = new TelegramUpdateObjPOJO();
+                    m.setUpdate_id(chat.getUpdateID());
+
+                    TelegramMessageContentPOJO c = new TelegramMessageContentPOJO();
+                    c.setMessage_id(60);
+                    c.setDate(chat.getDate());
+                    c.setText(chat.getText());
+
+                    TelegramMessageChatPOJO pc = new TelegramMessageChatPOJO();
+                    pc.setFirst_name("whatever");
+                    pc.setLast_name("whatever 2");
+                    pc.setType("private");
+                    pc.setId(chat.getChatID());
+
+                    TelegramMessageFromPOJO mf = new TelegramMessageFromPOJO();
+                    mf.setFirst_name("whatever");
+                    mf.setLast_name("whatever 2");
+                    mf.setId(chat.getChatID());
+                    mf.setIs_bot(false);
+                    mf.setLanguage_code("en-us");
+
+                    c.setChat(pc);
+                    c.setFrom(mf);
+
+                    m.setMessage(c);
+
+                    getUpdates.getResult().add(m);
+                    newChat.add(chat);
+                }
             }
+            
+            ChatRepository.getInstance().getChats().clear();
+            ChatRepository.getInstance().getChats().addAll(newChat);
             
             Gson gson = new Gson();
             String json = gson.toJson(getUpdates);
