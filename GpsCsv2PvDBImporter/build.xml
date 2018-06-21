@@ -12,6 +12,7 @@
     <import file="nbproject/build-impl.xml"/>
     <target name="-post-jar">
         <copy file="dbconfig.properties" todir="dist" />
+        <copy file="log4j.properties" todir="dist"/>
     </target>
     <!--
 

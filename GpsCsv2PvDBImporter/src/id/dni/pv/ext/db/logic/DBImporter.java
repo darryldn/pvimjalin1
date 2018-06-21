@@ -14,17 +14,18 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.apache.log4j.Logger;
 
 /**
  *
  * @author darryl.sulistyan
  */
 public class DBImporter {
+    
+    private static final Logger LOGGER = Logger.getLogger(DBImporter.class);
     
     private final String csvInput;
     private final String connectionUrl;
@@ -65,13 +66,11 @@ public class DBImporter {
                 // okay, the deviceID exists in PV. Insert the geo data now!
                 updated = runner.update(conn, insertSql, deviceID, value);
                 if (updated == 0) {
-                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
-                        " - Cannot update device information for {0}", deviceID);
+                    LOGGER.warn(String.format(" - Cannot update device information for %s", deviceID));
                 }
                 
             } else {
-                Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
-                        " - No device data in ProView for {0}", deviceID);
+                LOGGER.warn(String.format(" - No device data in ProView for %s", deviceID));
                 
             }
             
@@ -83,11 +82,13 @@ public class DBImporter {
     public void importCsv() throws SQLException, FileNotFoundException, IOException {
         
         Connection conn = null;
+        boolean isSuccess = false;
+        BufferedReader in = null;
+        
         try {
             conn = DriverManager.getConnection(this.connectionUrl, username, password);
             conn.setAutoCommit(false);
-            
-            BufferedReader in = new BufferedReader(new FileReader(csvInput));
+            in = new BufferedReader(new FileReader(csvInput));
             
             QueryRunner runner = new QueryRunner();
             
@@ -105,17 +106,21 @@ public class DBImporter {
                     updateOrInsert(runner, conn, SQL_UPDATE_PV_LONGITUDE, SQL_INSERT_PV_LONGITUDE, deviceID, longitude);
                     
                 } catch (NumberFormatException ex) {
-                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
-                            " - Input Error for deviceID {0}. Latitude or Longitude is not a number.", 
-                            deviceID);
+                    LOGGER.warn(String.format(
+                            " - Input Error for deviceID %s. Latitude or Longitude is not a number.", 
+                            deviceID));
                 }
             }
             
             conn.commit();
+            isSuccess = true;
             
         } finally {
-            if (conn != null) {
+            if (!isSuccess && conn != null) {
                 conn.rollback();
+            }
+            if (in != null) {
+                in.close();
             }
             DbUtils.close(conn);
             
