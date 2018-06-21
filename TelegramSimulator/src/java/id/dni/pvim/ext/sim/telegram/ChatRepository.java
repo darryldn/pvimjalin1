@@ -77,7 +77,7 @@ class ChatRepository {
     public synchronized void addChat(long chatID, String text) {
         Chat n = new Chat(chatID, text);
         n.setUpdateID(lastChatUpdateID++);
-        n.setDate(System.currentTimeMillis());
+        n.setDate(System.currentTimeMillis() / 1000); // telegram does not keep milliseconds
         repos.add(n);
     }
     
