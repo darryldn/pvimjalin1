@@ -12,11 +12,11 @@ import id.dni.pvim.ext.repo.db.spec.ISqlSpecification;
 import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
 import id.dni.pvim.ext.repo.db.vo.ITableVoFactory;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.sql.DataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 
@@ -27,12 +27,12 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
 public class GenericSqlRepository implements ICRUDRepository<ITableDescriptorVo>{
 
     private final CommonCruds crud;
-    private final DataSource ds;
+    private final Connection conn;
     private final ITableVoFactory factory;
     
-    public GenericSqlRepository(DataSource ds, ITableVoFactory factory) {
-        this.ds = ds;
-        this.crud = new CommonCruds(ds);
+    public GenericSqlRepository(Connection conn, ITableVoFactory factory) {
+        this.conn = conn;
+        this.crud = new CommonCruds(conn);
         this.factory = factory;
     }
     
@@ -71,14 +71,14 @@ public class GenericSqlRepository implements ICRUDRepository<ITableDescriptorVo>
         Object[] params = sqlSpec.getSqlParams();
         
         MapListHandler handler = new MapListHandler();
-        QueryRunner runner = new QueryRunner(this.ds);
+        QueryRunner runner = new QueryRunner();
         
         try {
             List<Map<String, Object>> result;
             if (params == null || params.length == 0) {
-                result = runner.query(sql, handler);
+                result = runner.query(conn, sql, handler);
             } else {
-                result = runner.query(sql, handler, params);
+                result = runner.query(conn, sql, handler, params);
             }
             List<ITableDescriptorVo> ln = new ArrayList<>();
             for (Map<String, Object> e : result) {
