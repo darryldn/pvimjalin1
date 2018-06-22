@@ -12,6 +12,6 @@ import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberParameterVo;
  *
  * @author darryl.sulistyan
  */
-interface ITelegramSubscribersParameterRepository extends ICRUDRepository<TelegramSubscriberParameterVo> {
+public interface ITelegramSubscribersParameterRepository extends ICRUDRepository<TelegramSubscriberParameterVo> {
     
 }

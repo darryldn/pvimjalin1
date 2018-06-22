@@ -3,18 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package id.dni.pvim.ext.telegram.repo;
+package id.dni.pvim.ext.telegram.repo.impl;
 
-import id.dni.pvim.ext.db.config.PVIMDBConnectionFactory;
 import id.dni.pvim.ext.repo.ISpecification;
 import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
 import id.dni.pvim.ext.repo.db.vo.ITableVoFactory;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.repo.impl.GenericSqlRepository;
+import id.dni.pvim.ext.telegram.repo.ISlmUserRepository;
 import id.dni.pvim.ext.telegram.repo.db.vo.SlmUserVo;
 import id.dni.pvim.ext.telegram.repo.spec.SlmUserIsMobileExistSpec;
+import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -25,9 +25,10 @@ public class SlmUserRepository implements ISlmUserRepository {
 
     private final GenericSqlRepository repo;
     
-    public SlmUserRepository() {
+    public SlmUserRepository(Connection conn) {
         repo = new GenericSqlRepository(
-                PVIMDBConnectionFactory.getInstance().getDataSource(), 
+//                PVIMDBConnectionFactory.getInstance().getDataSource(), 
+                conn,
                 new ITableVoFactory() {
             @Override
             public ITableDescriptorVo create() {

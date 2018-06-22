@@ -3,15 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package id.dni.pvim.ext.telegram.repo;
+package id.dni.pvim.ext.telegram.repo.impl;
 
-import id.dni.pvim.ext.db.config.PVIMDBConnectionFactory;
 import id.dni.pvim.ext.repo.ISpecification;
 import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
 import id.dni.pvim.ext.repo.db.vo.ITableVoFactory;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.repo.impl.GenericSqlRepository;
+import id.dni.pvim.ext.telegram.repo.ITelegramSuscribersRepository;
 import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,8 +27,11 @@ public class TelegramSubscribersRepository implements ITelegramSuscribersReposit
 //    private static final String PAR_NAME_LATEST_LASTPROCESSED = "LATEST_LASTPROCESSED";
 //    private final ITelegramSubscribersParameterRepository parameterRepo;
     
-    public TelegramSubscribersRepository() {
-        repo = new GenericSqlRepository(PVIMDBConnectionFactory.getInstance().getDataSource(), new ITableVoFactory() {
+    public TelegramSubscribersRepository(Connection conn) {
+        repo = new GenericSqlRepository(
+                conn,
+//                PVIMDBConnectionFactory.getInstance().getDataSource(), 
+                new ITableVoFactory() {
             @Override
             public ITableDescriptorVo create() {
                 return new TelegramSubscriberVo();

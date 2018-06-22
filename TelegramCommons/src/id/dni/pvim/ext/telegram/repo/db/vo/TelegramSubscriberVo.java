@@ -6,7 +6,7 @@
 package id.dni.pvim.ext.telegram.repo.db.vo;
 
 import id.dni.pvim.ext.repo.db.vo.FieldData;
-import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
+import id.dni.pvim.ext.repo.db.vo.GenericVo;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 );
  * @author darryl.sulistyan
  */
-public class TelegramSubscriberVo implements ITableDescriptorVo {
+public class TelegramSubscriberVo extends GenericVo {
     
     public static final String TABLE_NAME = "PVIM_EXT_TELEGRAM_SUBSCRIBERS";
     public static final String FIELD_SUBS_ID = "SUBS_ID";
@@ -71,11 +71,13 @@ public class TelegramSubscriberVo implements ITableDescriptorVo {
     
     @Override
     public void fillDataFromMap(Map<String, Object> fromDB) throws PvExtPersistenceException {
-        
         Logger.getLogger(this.getClass().getName()).log(Level.FINEST, "Read from DB: {0}", fromDB);
-        for (Map.Entry<String, Object> k : fromDB.entrySet()) {
-            tbl.get(k.getKey()).setValue(k.getValue());
-        }
+        
+        super.fillDataFromMap(fromDB);
+        
+//        for (Map.Entry<String, Object> k : fromDB.entrySet()) {
+//            tbl.get(k.getKey()).setValue(k.getValue());
+//        }
         
         this.setSubs_id((String) fromDB.get(FIELD_SUBS_ID));
         this.setLastupdate(o2l(fromDB.get(FIELD_LASTUPDATE)));

@@ -6,8 +6,7 @@
 package id.dni.pvim.ext.telegram.repo.db.vo;
 
 import id.dni.pvim.ext.repo.db.vo.FieldData;
-import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
-import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
+import id.dni.pvim.ext.repo.db.vo.GenericVo;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -22,7 +21,7 @@ create table PVIM_EXT_TELEGRAM_SUBSCRIBERS_PARAMS (
 );
  * @author darryl.sulistyan
  */
-public class TelegramSubscriberParameterVo implements ITableDescriptorVo {
+public class TelegramSubscriberParameterVo extends GenericVo {
 
     public static final String 
             TABLE_NAME = "PVIM_EXT_TELEGRAM_SUBSCRIBERS_PARAMS",
@@ -48,12 +47,12 @@ public class TelegramSubscriberParameterVo implements ITableDescriptorVo {
         return tbl;
     }
 
-    @Override
-    public void fillDataFromMap(Map<String, Object> fromDB) throws PvExtPersistenceException {
-        for (Map.Entry<String, Object> k : fromDB.entrySet()) {
-            tbl.get(k.getKey()).setValue(k.getValue());
-        }
-    }
+//    @Override
+//    public void fillDataFromMap(Map<String, Object> fromDB) throws PvExtPersistenceException {
+//        for (Map.Entry<String, Object> k : fromDB.entrySet()) {
+//            tbl.get(k.getKey()).setValue(k.getValue());
+//        }
+//    }
     
     public void setParName(String parameterName) {
         tbl.get(FIELD_PAR_NAME).setValue(parameterName);

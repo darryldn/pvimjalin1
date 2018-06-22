@@ -3,15 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package id.dni.pvim.ext.telegram.repo;
+package id.dni.pvim.ext.telegram.repo.impl;
 
-import id.dni.pvim.ext.db.config.PVIMDBConnectionFactory;
 import id.dni.pvim.ext.repo.ISpecification;
 import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
 import id.dni.pvim.ext.repo.db.vo.ITableVoFactory;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.repo.impl.GenericSqlRepository;
+import id.dni.pvim.ext.telegram.repo.ITelegramSubscribersParameterRepository;
 import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberParameterVo;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,12 +20,15 @@ import java.util.List;
  *
  * @author darryl.sulistyan
  */
-class TelegramSubscribersParameterRepository implements ITelegramSubscribersParameterRepository {
+public class TelegramSubscribersParameterRepository implements ITelegramSubscribersParameterRepository {
 
     private final GenericSqlRepository repo;
     
-    public TelegramSubscribersParameterRepository() {
-        repo = new GenericSqlRepository(PVIMDBConnectionFactory.getInstance().getDataSource(), new ITableVoFactory() {
+    public TelegramSubscribersParameterRepository(Connection conn) {
+        repo = new GenericSqlRepository(
+                conn,
+//                PVIMDBConnectionFactory.getInstance().getDataSource(), 
+                new ITableVoFactory() {
             @Override
             public ITableDescriptorVo create() {
                 return new TelegramSubscriberParameterVo();
