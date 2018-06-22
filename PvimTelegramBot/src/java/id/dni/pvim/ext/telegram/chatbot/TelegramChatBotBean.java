@@ -5,6 +5,8 @@
  */
 package id.dni.pvim.ext.telegram.chatbot;
 
+import id.dni.pvim.ext.db.config.PVIMDBConnectionFactory;
+import id.dni.pvim.ext.db.trx.IProViewTrx;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.server.net.RequestSenderBeanLocal;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessageChatPOJO;
@@ -12,19 +14,19 @@ import id.dni.pvim.ext.telegram.pojo.TelegramMessageContentPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramUpdateObjPOJO;
 import id.dni.pvim.ext.telegram.repo.ISlmUserRepository;
 import id.dni.pvim.ext.telegram.repo.ITelegramSuscribersRepository;
-import id.dni.pvim.ext.telegram.repo.SlmUserRepository;
-import id.dni.pvim.ext.telegram.repo.TelegramSubscribersRepository;
+import id.dni.pvim.ext.telegram.repo.TelegramRepositoryFactory;
 import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
 import id.dni.pvim.ext.telegram.repo.spec.TelegramSubscribersByChatIDSpec;
 import id.dni.pvim.ext.telegram.repo.spec.TelegramSubscribersPhoneNumSpecification;
 import id.dni.pvim.ext.web.in.Commons;
+import java.sql.Connection;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 /**
  *
@@ -33,14 +35,14 @@ import javax.ejb.Stateless;
 @Stateless
 public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
 
-    @Resource
-    private SessionContext ctx;
+//    @Resource
+//    private SessionContext ctx;
 
     @EJB
     private RequestSenderBeanLocal telegramRequestBean;
     
-    private final ITelegramSuscribersRepository subscriberRepo = new TelegramSubscribersRepository();
-    private final ISlmUserRepository slmUserRepo = new SlmUserRepository();
+//    private final ITelegramSuscribersRepository subscriberRepo = new TelegramSubscribersRepository();
+//    private final ISlmUserRepository slmUserRepo = new SlmUserRepository();
 
     private String getUsage() {
         StringBuilder sb = new StringBuilder();
@@ -75,33 +77,100 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
     private void sendTelegramMessage(long chatID, String message) {
         telegramRequestBean.asyncSendTelegramReply(chatID, message);
     }
-
-    private void sendTelegramMessage(
-            long chatID, boolean isSuccess, String successMessage, String failMessage) {
-
-        if (isSuccess) {
-            //MessageSender.sendMessageAndSwallowLogs(chatID, successMessage);
-            telegramRequestBean.asyncSendTelegramReply(chatID, successMessage);
-
-        } else {
-            //MessageSender.sendMessageAndSwallowLogs(chatID, failMessage);
-            telegramRequestBean.asyncSendTelegramReply(chatID, failMessage);
-
-        }
-
+    
+    private TelMsg handleException(long telegramChatId, Exception ex) {
+        Logger.getLogger(TelegramChatBotBean.class.getName()).log(Level.SEVERE, null, ex);
+        TelMsg telegramMessage = new TelMsg(false, telegramChatId, "Internal server error, please contact system administrator");
+        return telegramMessage;
     }
-
+    
+    /**
+     * Transaction attribute must be REQUIRES_NEW because every message must be
+     * performed separately, that is, the error of one chat message should not
+     * influence the other.
+     * 
+     * @param updateObj 
+     */
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void consume(TelegramUpdateObjPOJO updateObj) {
-        if (updateObj == null) {
-            return;
-        }
-
+        if (updateObj == null) { return; }
         TelegramMessageContentPOJO content = updateObj.getMessage();
-        if (content == null) {
-            return;
+        if (content == null) { return; }
+        TelegramMessageChatPOJO user = content.getChat();
+        
+        long telegramChatId = user.getId();
+        IProViewTrx pvimTx = null;
+        TelMsg telegramMessage = null;
+        try {
+            pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
+            pvimTx.begin();
+            
+            Object conn = pvimTx.getTrxConnection();
+            ITelegramSuscribersRepository subscriberRepo = 
+                    TelegramRepositoryFactory.getInstance().getTelegramSubscribersRepository(conn);
+            ISlmUserRepository slmUserRepo = 
+                    TelegramRepositoryFactory.getInstance().getSlmUserRepository(conn);
+            telegramMessage = _consume(updateObj, subscriberRepo, slmUserRepo);
+            if (telegramMessage == null || !telegramMessage.isIsSuccess()) {
+                pvimTx.rollback();
+            } else {
+                pvimTx.commit();
+            }
+        } catch (Exception ex) { // must handle also another exceptions, don't pass above.
+            if (pvimTx != null) {
+                try {
+                    pvimTx.rollback();
+                } catch (PvExtPersistenceException ex1) {
+                    Logger.getLogger(TelegramChatBotBean.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+            telegramMessage = handleException(telegramChatId, ex);
+            
+        } finally {
+            if (pvimTx != null) {
+                try {
+                    pvimTx.close();
+                } catch (PvExtPersistenceException ex1) {
+                    Logger.getLogger(TelegramChatBotBean.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+            if (telegramMessage != null) {
+                sendTelegramMessage(telegramMessage.getId(), telegramMessage.getText());
+            }
+        }
+    }
+    
+    private static class TelMsg {
+        private final long id;
+        private final String text;
+        private final boolean isSuccess;
+
+        public TelMsg(boolean isSuccess, long id, String text) {
+            this.id = id;
+            this.text = text;
+            this.isSuccess = isSuccess;
+        }
+        
+        public long getId() {
+            return id;
         }
 
+        public String getText() {
+            return text;
+        }
+
+        public boolean isIsSuccess() {
+            return isSuccess;
+        }
+        
+    }
+    
+    private TelMsg _consume(TelegramUpdateObjPOJO updateObj, 
+            ITelegramSuscribersRepository subscriberRepo, 
+            ISlmUserRepository slmUserRepo) throws PvExtPersistenceException {
+        
+        TelegramMessageContentPOJO content = updateObj.getMessage();
         TelegramMessageChatPOJO user = content.getChat();
 
         long id = user.getId();
@@ -111,11 +180,11 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
         // it is possible that the user already installed Telegram with different
         // name registered from ProView.
         if (Commons.isEmptyStrIgnoreSpaces(text)) {
-            return;
+            return null;
         }
         
         long chatDate = content.getDate();
-        chatDate *= 1000; // transform to ms
+        chatDate *= 1000; // transform to ms. Telegram only up to seconds precision.
         
         // commands:
         // /help --> print usage
@@ -128,7 +197,7 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
 
                 String probablePhoneNum = commands[1];
                 if (Commons.isEmptyStrIgnoreSpaces(probablePhoneNum)) {
-                    sendTelegramMessage(id, "No phone number given");
+                    return new TelMsg(false, id, "No phone number given");
 
                 } else {
 
@@ -136,31 +205,34 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
                         // Find the phone number in ProViewIM.
                         // If not registered, send error updateObj saying no phone number found
                         boolean isMobileExist;
-                        ISlmUserRepository userRepo = slmUserRepo;
+                        ISlmUserRepository userRepo = slmUserRepo; 
                         isMobileExist = userRepo.isMobileExist(probablePhoneNum);
 
                         if (isMobileExist) {
 
                             String phoneNum = probablePhoneNum;
                             long chatID = id;
-                            ITelegramSuscribersRepository repos = subscriberRepo;
+                            ITelegramSuscribersRepository repos = subscriberRepo; 
 
-                            // modify the code to enforce 1-1 relationship between phone num and chat id
+                            // modify the code to enforce 1-1 relationship between phone num and chat telegramChatId
                             TelegramSubscriberVo existingPhone = repos.querySingleResult(
                                     new TelegramSubscribersPhoneNumSpecification(phoneNum));
                             if (existingPhone != null) {
                                 if (chatID != existingPhone.getChat_id()/* && chatDate > existingPhone.getLastupdate()*/) {
                                     // this shouldn't happen because Telegram also
-                                    // associates mobile number with chat id
-                                    // Different machine with same mobile with obtain same chat id as well
+                                    // associates mobile number with chat telegramChatId
+                                    // Different machine with same mobile with obtain same chat telegramChatId as well
                                     // from Telegram.
                                     
                                     // new ChatID is found with same phone number. Update entry in DB
                                     existingPhone.setChat_id(chatID);
                                     existingPhone.setLastupdate(chatDate);
                                     boolean ok = repos.update(existingPhone);
-                                    sendTelegramMessage(chatID, ok, "Update chatID successful",
-                                            "Update chatID failed, try again later");
+                                    if (ok) {
+                                        return new TelMsg(true, id, "Update chatID successful");
+                                    } else {
+                                        return new TelMsg(false, id, "Update chatID failed, try again later");
+                                    }
                                     
                                 }
                                 // entry exists in DB, no need to do anything
@@ -174,8 +246,11 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
                                         existingPhone.setPhone_num(phoneNum);
                                         existingPhone.setLastupdate(chatDate);
                                         boolean ok = repos.update(existingPhone);
-                                        sendTelegramMessage(chatID, ok, "Update mobile number successful",
-                                                "Update mobile number failed, try again later");
+                                        if (ok) {
+                                            return new TelMsg(true, id, "Update mobile number successful");
+                                        } else {
+                                            return new TelMsg(false, id, "Update mobile number failed, try again later");
+                                        }
                                         
                                     }
                                 } else {
@@ -183,35 +258,28 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
                                     // completely new entry
                                     TelegramSubscriberVo newSub = new TelegramSubscriberVo();
                                     newSub.setChat_id(chatID);
-                                    //newSub.setLastupdate(System.currentTimeMillis());
                                     newSub.setLastupdate(chatDate);
                                     newSub.setPhone_num(phoneNum);
                                     newSub.setSubs_id(Commons.randomUUID());
                                     newSub.setPasskey(genPassKey());
                                     boolean ok = repos.insert(newSub);
-//                                    sendTelegramMessage(chatID, ok,
-//                                            String.format(
-//                                                    "Registration successful with number %s! Your passKey is %s",
-//                                                    probablePhoneNum, newSub.getPasskey()),
-//                                            "Registration failed. Please try again later");
-                                    sendTelegramMessage(chatID, ok,
-                                            String.format(
+                                    if (ok) {
+                                        return new TelMsg(true, id, String.format(
                                                     "Registration successful with number %s!",
-                                                    probablePhoneNum),
-                                            "Registration failed. Please try again later");
-
+                                                    probablePhoneNum));
+                                    } else {
+                                        return new TelMsg(false, id, "Registration failed. Please try again later");   
+                                    }
                                 }
                             }
                             
                         } else {
-                            sendTelegramMessage(id, "Registration failed. The mobile number is not found in PVIM database");
+                            return new TelMsg(false, id, "Registration failed. The mobile number is not found in PVIM database");
                             
                         }
 
                     } catch (PvExtPersistenceException ex) {
-                        Logger.getLogger(TelegramChatBotBean.class.getName()).log(Level.SEVERE, "Database error", ex);
-                        sendTelegramMessage(id, "Registration failed. Contact system administrator for details");
-                        ctx.setRollbackOnly();
+                        throw ex;
 
                     }
                 }
@@ -223,7 +291,7 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
             if (commands.length == 1) {
                 String cmd = commands[0].toLowerCase();
                 if ("/help".equals(cmd)) {
-                    sendTelegramMessage(id, getUsage());
+                    return new TelMsg(true, id, getUsage());
 
                 } else if ("/unreg".equals(cmd)) {
                     
@@ -233,22 +301,21 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
                         if (subs != null) {
                             boolean isSuccess = repo.delete(subs);
                             if (isSuccess) {
-                                sendTelegramMessage(id, "Unregistration successful!");
+                                return new TelMsg(true, id, "Unregistration successful!");
                             } else {
-                                sendTelegramMessage(id, "Unregistration failed!");
+                                return new TelMsg(false, id, "Unregistration failed!");
                             }
                         }
                         
                     } catch (PvExtPersistenceException ex) {
-                        Logger.getLogger(TelegramChatBotBean.class.getName()).log(Level.SEVERE, null, ex);
-                        sendTelegramMessage(id, "Registration failed. Contact system administrator for details");
-                        ctx.setRollbackOnly();
+                        throw ex;
                     }
                     
                 }
             }
         }
 
+        return null;
     }
 
 }
