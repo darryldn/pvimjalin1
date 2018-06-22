@@ -8,11 +8,11 @@ package id.dni.pvim.ext.repo.db;
 import id.dni.pvim.ext.repo.db.vo.FieldData;
 import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
 import id.dni.pvim.ext.web.in.Commons;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.sql.DataSource;
 import org.apache.commons.dbutils.QueryRunner;
 
 /**
@@ -21,10 +21,10 @@ import org.apache.commons.dbutils.QueryRunner;
  */
 public class CommonCruds {
     
-    private final DataSource ds;
+    private final Connection conn;
     
-    public CommonCruds(DataSource ds) {
-        this.ds = ds;
+    public CommonCruds(Connection conn) {
+        this.conn = conn;
     }
     
     Pair buildInsert(ITableDescriptorVo t) {
@@ -74,7 +74,7 @@ public class CommonCruds {
     
     public int insert(ITableDescriptorVo t) throws SQLException {
         
-        QueryRunner runner = new QueryRunner(ds);
+        QueryRunner runner = new QueryRunner();
         try {
             Pair pair = buildInsert(t);
             if (pair == null) {
@@ -94,7 +94,7 @@ public class CommonCruds {
                     params.add(null);
                 }
             }
-            int updated = runner.update(sql, params.toArray());
+            int updated = runner.update(conn, sql, params.toArray());
             return updated;
             
         } finally {
@@ -161,7 +161,7 @@ public class CommonCruds {
     
     public int update(ITableDescriptorVo t) throws SQLException {
         
-        QueryRunner runner = new QueryRunner(ds);
+        QueryRunner runner = new QueryRunner();
         try {
             Pair pair = buildUpdate(t);
             if (pair == null) {
@@ -181,7 +181,7 @@ public class CommonCruds {
                     params.add(null);
                 }
             }
-            int updated = runner.update(sql, params.toArray());
+            int updated = runner.update(conn, sql, params.toArray());
             return updated;
             
         } finally {
@@ -227,7 +227,7 @@ public class CommonCruds {
     }
     
     public int delete(ITableDescriptorVo t) throws SQLException {
-        QueryRunner runner = new QueryRunner(ds);
+        QueryRunner runner = new QueryRunner();
         try {
             Pair pair = buildDelete(t);
             if (pair == null) {
@@ -247,7 +247,7 @@ public class CommonCruds {
                     params.add(null);
                 }
             }
-            int updated = runner.update(sql, params.toArray());
+            int updated = runner.update(conn, sql, params.toArray());
             return updated;
             
         } finally {
