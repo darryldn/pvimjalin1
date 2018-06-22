@@ -5,8 +5,8 @@
  */
 package id.dni.pvim.ext.db.config;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import id.dni.pvim.ext.db.trx.IProViewTrx;
+import id.dni.pvim.ext.db.trx.impl.ProViewJdbcTrxImpl;
 import javax.sql.DataSource;
 
 /**
@@ -26,6 +26,14 @@ public class PVDBConnectionFactory {
         return INSTANCE;
     }
     
+    /**
+     * NOT REUSABLE
+     * @return transaction is not reusable. Get new transaction to start another one
+     */
+    public IProViewTrx getTransaction() {
+        return new ProViewJdbcTrxImpl(getDataSource());
+    }
+    
     public final synchronized DataSource getDataSource() {
         if (dataSource == null) {
             dataSource = DBConnectionFactory.getInstance().getDataSource(
@@ -35,8 +43,12 @@ public class PVDBConnectionFactory {
         return dataSource;
     }
     
-    public Connection getConnection() throws SQLException {
-        DataSource ds = getDataSource();
-        return ds.getConnection();
-    }
+//    public Connection getConnection() throws SQLException {
+//        DataSource ds = getDataSource();
+//        Connection c = ds.getConnection();
+//        if (c.getAutoCommit()) {
+//            c.setAutoCommit(false);
+//        }
+//        return c;
+//    }
 }
