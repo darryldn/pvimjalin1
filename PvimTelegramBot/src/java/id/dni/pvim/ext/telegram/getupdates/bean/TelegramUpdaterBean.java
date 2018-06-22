@@ -88,7 +88,7 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
         // because it is cancelled in @PostConstruct method above. Ignore the exception. It is harmless
         // This is because the timer is set persistent = true (default behavior). The timer persists
         // even after server shutdown / restart.
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO,
+        Logger.getLogger(this.getClass().getName()).log(Level.FINE,
                 " - timer executed {0}", timer.getInfo());
 
         // 1. Send request
@@ -100,7 +100,7 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
         }
 
         try {
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - urlStr = {0}", urlStr);
+            Logger.getLogger(this.getClass().getName()).log(Level.FINE, " - urlStr = {0}", urlStr);
             
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -117,7 +117,7 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
                 returnData = Commons.inputStreamToString(inputStream);
             }
 
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO,
+            Logger.getLogger(this.getClass().getName()).log(Level.FINE,
                     " - obtain request result from telegram: {0}", returnData);
 
             // 3. Pass object to TelegramChatBot
@@ -140,8 +140,8 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
                             continue;
                         }
 
-                        lastOffset = updateObj.getUpdate_id();
-
+                        lastOffset = updateObj.getUpdate_id()+1;
+                        
                         // check last update date from subscribers table
 //                        long latestLastupdated;
 //                        {
@@ -178,8 +178,8 @@ public class TelegramUpdaterBean implements TelegramUpdaterBeanLocal {
 
                         chatbot.consume(updateObj);
                     }
-                    lastOffset += 1; // Telegram grabs update id >= lastOffset
-                                     // so add one to skip it!
+//                    lastOffset += 1; // Telegram grabs update id >= lastOffset
+//                                     // so add one to skip it!
                 }
             }
 
