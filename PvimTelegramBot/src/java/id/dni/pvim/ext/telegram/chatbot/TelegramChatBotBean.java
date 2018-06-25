@@ -112,11 +112,12 @@ public class TelegramChatBotBean implements TelegramChatBotBeanLocal {
             ISlmUserRepository slmUserRepo = 
                     TelegramRepositoryFactory.getInstance().getSlmUserRepository(conn);
             telegramMessage = _consume(updateObj, subscriberRepo, slmUserRepo);
-            if (telegramMessage == null || !telegramMessage.isIsSuccess()) {
-                pvimTx.rollback();
-            } else {
+            // If want to rollback, throw exception!
+//            if (telegramMessage == null || !telegramMessage.isIsSuccess()) {
+//                pvimTx.rollback();
+//            } else {
                 pvimTx.commit();
-            }
+//            }
         } catch (Exception ex) { // must handle also another exceptions, don't pass above.
             if (pvimTx != null) {
                 try {
