@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jee="http://www.springframework.org/schema/jee"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:util="http://www.springframework.org/schema/util"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+          http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+          http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+          http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+          http://www.springframework.org/schema/util/ http://www.springframework.org/schema/util/spring-util.xsd
+">
+    
+    <jee:jndi-lookup id="pvimDataSource"
+                     jndi-name="java:/jdbc/RAB" 
+                     expected-type="javax.sql.DataSource" />
+    
+    <jee:jndi-lookup id="pvDataSource"
+                     jndi-name="java:/jdbc/PROVIEW"
+                     expected-type="javax.sql.DataSource" />
+    
+    <context:annotation-config></context:annotation-config>
+    
+    <tx:annotation-driven></tx:annotation-driven>
+    
+    <task:executor id="myexecutor" pool-size="5"  />
+    <task:annotation-driven executor="myexecutor"/>
+    
+    <bean id="transactionManager1"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="pvimDataSource" />
+        <qualifier value="pvimTransactionManager" />
+    </bean>
+    
+    <bean id="transactionManager2"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="pvDataSource" />
+        <qualifier value="pvTransactionManager" />
+    </bean>
+    
+    <!--<util:properties id="applicationProps" location="application.properties" />
+    <context:property-placeholder properties-ref="applicationProps" />-->
+    <!--<context:property-placeholder location="classpath:application.properties" />-->
+    <context:property-placeholder location="classpath:telegram.properties" />
+    <bean id="getupdaterservice" class="springstuff.service.impl.TelegramGetUpdaterServiceImpl"></bean>
+    
+    <context:component-scan base-package="springstuff.service.impl" />
+    <context:component-scan base-package="springstuff.dao.impl" />
+    
+</beans>
