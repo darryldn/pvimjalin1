@@ -5,8 +5,9 @@
  */
 package id.dni.pvim.ext.repo.boot;
 
+import id.dni.pvim.ext.repo.db.IDBMachineBasedataRepository;
 import id.dni.pvim.ext.db.config.PVIMDBConnectionFactory;
-import id.dni.pvim.ext.repo.db.DBMachineBasedataRepository;
+import id.dni.pvim.ext.repo.impl.DBMachineBasedataRepository;
 import id.dni.pvim.ext.repo.db.TicketNotesDBRepositoryImpl;
 
 /**
