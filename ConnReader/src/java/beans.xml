@@ -29,7 +29,7 @@
     
     <tx:annotation-driven></tx:annotation-driven>
     
-    <task:executor id="myexecutor" pool-size="5"  />
+    <task:executor id="myexecutor" pool-size="50"  />
     <task:annotation-driven executor="myexecutor"/>
     
     <bean id="transactionManager1"
@@ -47,7 +47,7 @@
     <!--<util:properties id="applicationProps" location="application.properties" />
     <context:property-placeholder properties-ref="applicationProps" />-->
     <!--<context:property-placeholder location="classpath:application.properties" />-->
-    <context:property-placeholder location="classpath:telegram.properties" />
+    <context:property-placeholder location="classpath:telegram.properties, classpath:application.properties" />
     <bean id="getupdaterservice" class="springstuff.service.impl.TelegramGetUpdaterServiceImpl"></bean>
     
     <context:component-scan base-package="springstuff.service.impl" />

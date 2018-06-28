@@ -8,8 +8,9 @@ package springstuff.service.impl;
 import id.dni.pvim.ext.telegram.commons.sender.MessageSender;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import springstuff.service.AsyncRunnerService;
 import springstuff.service.TelegramMessageSenderService;
 
 /**
@@ -19,14 +20,27 @@ import springstuff.service.TelegramMessageSenderService;
 @Service
 public class TelegramMessageSenderServiceImpl implements TelegramMessageSenderService {
 
+    private AsyncRunnerService async;
+    
+    @Autowired
+    public void setService(AsyncRunnerService service) {
+        this.async = service;
+    }
+    
     @Override
-    @Async
-    public void asyncSendTelegramReply(long chatID, String message) {
-        try {
-            MessageSender.sendMessageAndSwallowLogs(chatID, message);
-        } catch (Exception ex) {
-            Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
-        }
+//    @Async
+    public void asyncSendTelegramReply(final long chatID, final String message) {
+        async.run(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    MessageSender.sendMessageAndSwallowLogs(chatID, message);
+                } catch (Exception ex) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        
     }
     
 }
