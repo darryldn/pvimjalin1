@@ -172,7 +172,7 @@ public class TelegramChatServiceImpl implements TelegramChatService {
         // it is possible that the user already installed Telegram with different
         // name registered from ProView.
         if (Commons.isEmptyStrIgnoreSpaces(text)) {
-            return null;
+            return new TelMsg(false, id, "No input given");
         }
 
         long chatDate = content.getDate();
@@ -226,6 +226,8 @@ public class TelegramChatServiceImpl implements TelegramChatService {
                                         return new TelMsg(false, id, "Update chatID failed, try again later");
                                     }
 
+                                } else {
+                                    return new TelMsg(true, id, "Number is already registered");
                                 }
                                 // entry exists in DB, no need to do anything
 
@@ -244,6 +246,8 @@ public class TelegramChatServiceImpl implements TelegramChatService {
                                             return new TelMsg(false, id, "Update mobile number failed, try again later");
                                         }
 
+                                    } else {
+                                        return new TelMsg(true, id, "Number is already registered");
                                     }
                                 } else {
 
@@ -276,6 +280,8 @@ public class TelegramChatServiceImpl implements TelegramChatService {
                     }
                 }
 
+            } else {
+                return new TelMsg(false, id, "Unrecognized command " + cmd);
             }
 
         } else {
@@ -297,17 +303,23 @@ public class TelegramChatServiceImpl implements TelegramChatService {
                             } else {
                                 return new TelMsg(false, id, "Unregistration failed!");
                             }
+                        } else {
+                            return new TelMsg(false, id, "Number not found in PVIM database");
                         }
 
                     } catch (PvExtPersistenceException ex) {
                         throw ex;
                     }
 
+                } else {
+                    return new TelMsg(false, id, "Unrecognized command " + cmd);
                 }
+            } else {
+                return new TelMsg(false, id, "Unknown input");
             }
         }
 
-        return null;
+//        return null;
     }
 
 }
