@@ -30,7 +30,9 @@ import java.util.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -252,12 +254,21 @@ public class TelegramNotificationMessageListener implements MessageListener {
     
     private List<TelegramRequestResult> dispatchTicket(Ticket ticket, String messageContent) throws PvExtPersistenceException {
         String userid = ticket.getSlmUserByAssigneeId().getUserId();
-                    logger.logInfo("Assigned userID = " + userid);
+        logger.logInfo("Assigned userID = " + userid);
 
 //        String ticketNumber = ticket.getTicketNum();
         User safe_user = this.userDao.getUser(userid);
         String mobile = safe_user.getMobile();
-
+        
+        if (Commons.isEmptyStrIgnoreSpaces(mobile)) {
+            this.logger.logError("User with id " + userid + " has no mobile number registered!");
+            List<TelegramRequestResult> rsa = new ArrayList<>();
+            TelegramRequestResult res = new TelegramRequestResult("userid:" + userid, 0, messageContent, E_ERR);
+            res.setReceiverName(safe_user.getName());
+            rsa.add(res);
+            return rsa;
+        }
+        
         return sendToSpecifiedAccountsWithoutDispatch(ticket, new String[]{mobile}, messageContent);
         
 //        logger.logInfo("ticketNumber = " + ticketNumber + " mobile = " + mobile);
@@ -271,11 +282,38 @@ public class TelegramNotificationMessageListener implements MessageListener {
     private List<TelegramRequestResult> sendToSpecifiedAccountsWithoutDispatch(Ticket ticket, String[] accounts, String messageContent) 
             throws PvExtPersistenceException {
         
+        if (accounts.length == 0) {
+            this.logger.logError("Error sending message. No target accounts selected");
+            return Collections.EMPTY_LIST;
+        }
+        
         String ticketNumber = ticket.getTicketNum();
         List<TelegramSubscriberVo> subs = getSubscribers(accounts);
-        String telegramContent = getTelegramMessage(ticketNumber, messageContent);
-        return dispatchTicketToSubscribers(subs, telegramContent);
         
+        Set<String> subsPhones = new HashSet<>();
+        for (TelegramSubscriberVo sub : subs) {
+            subsPhones.add(sub.getPhone_num());
+        }
+        
+        List<TelegramRequestResult> errUsers = new ArrayList<>();
+        for (String account : accounts) {
+            if (Commons.isEmptyStrIgnoreSpaces(account)) {
+                TelegramRequestResult res = new TelegramRequestResult("N/A", 0, messageContent, E_ERR);
+                this.logger.logError("Error sending message. No mobile number registered.");
+                errUsers.add(res);
+                
+            } else if (!subsPhones.contains(account)) {
+                // found unregistered user! Must record it as failure!
+                TelegramRequestResult res = new TelegramRequestResult(account, 0, messageContent, E_ERR);
+                this.logger.logError("Error sending message. Mobile number " + account + " has not subscribed to telegram bot!");
+                errUsers.add(res);
+            }
+        }
+        
+        String telegramContent = getTelegramMessage(ticketNumber, messageContent);
+        List<TelegramRequestResult> result = dispatchTicketToSubscribers(subs, telegramContent);
+        result.addAll(errUsers);
+        return result;
     }
     
     @Override
@@ -370,6 +408,10 @@ public class TelegramNotificationMessageListener implements MessageListener {
                                 nr2.setSucFlag("1");
                             } else {
                                 nr2.setSucFlag("2");
+                            }
+                            
+                            if (rr.getReceiverName() != null) {
+                                nr2.setReceiverName(rr.getReceiverName());
                             }
                             
                             this.notificationManagerDAO.createNotificationRecord(nr2);

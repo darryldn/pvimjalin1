@@ -16,6 +16,7 @@ public class TelegramRequestResult {
     private final String message;
     private final int status;
     private final long date;
+    private String receiverName;
 
     public TelegramRequestResult(String mobile, long chatId, String message, int status) {
         this.mobile = mobile;
@@ -23,6 +24,14 @@ public class TelegramRequestResult {
         this.message = message;
         this.status = status;
         this.date = System.currentTimeMillis();
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
     }
 
     public long getDate() {
