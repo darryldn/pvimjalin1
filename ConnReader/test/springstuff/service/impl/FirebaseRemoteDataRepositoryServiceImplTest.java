@@ -5,7 +5,6 @@
  */
 package springstuff.service.impl;
 
-import com.google.firebase.database.DatabaseReference;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
@@ -17,8 +16,6 @@ import static org.junit.Assert.*;
 import springstuff.json.ComponentStateJson;
 import springstuff.json.DeviceComponentStateJson;
 import springstuff.json.MachineGpsJson;
-import springstuff.service.AsyncRunnerService;
-import springstuff.service.firebase.FirebaseDatabaseReferenceService;
 
 /**
  *
@@ -63,12 +60,12 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
         FirebaseRemoteDataRepositoryServiceImpl instance = new FirebaseRemoteDataRepositoryServiceImpl();
         instance.setGpsFirebaseDBPath("/location");
         instance.setMachineStatusFirebaseDBPath("/ATMs");
-        instance.setAsyncRunnerService(new AsyncRunnerService() {
-            @Override
-            public void run(Runnable job) {
-                job.run();
-            }
-        });
+//        instance.setAsyncRunnerService(new AsyncRunnerService() {
+//            @Override
+//            public void run(Runnable job) {
+//                job.run();
+//            }
+//        });
         
         for (int i=0; i<10; ++i) {
             DeviceComponentStateJson device = new DeviceComponentStateJson();
@@ -86,6 +83,8 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
         
         instance.setFirebaseDB(fdb);
         instance.send(devices);
+        
+        Thread.sleep(30000); // arbitrary
         
         fail("The test case is a prototype.");
     }
