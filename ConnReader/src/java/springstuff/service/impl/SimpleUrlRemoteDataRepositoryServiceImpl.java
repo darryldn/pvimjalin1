@@ -6,6 +6,7 @@
 package springstuff.service.impl;
 
 import com.google.gson.Gson;
+import id.dni.pvim.ext.net.TransferTicketDto;
 import id.dni.pvim.ext.web.in.Commons;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -84,6 +85,24 @@ public class SimpleUrlRemoteDataRepositoryServiceImpl implements RemoteDataRepos
         } catch (IOException ex) {
             throw new RemoteRepositoryException(ex);
         }
+    }
+
+    @Override
+    public void sendTickets(List<TransferTicketDto> tickets) throws RemoteRepositoryException {
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - Simulate sending request body: {0}", tickets);
+    }
+
+    @Override
+    public void removeTickets(List<TransferTicketDto> tickets) throws RemoteRepositoryException {
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - Simulate removing tickets: {0}", tickets);
+    }
+
+    @Override
+    public void periodicUpdateLastupdate() {
+    }
+
+    @Override
+    public void periodicSendPvimSlmUserData() {
     }
 
 }
