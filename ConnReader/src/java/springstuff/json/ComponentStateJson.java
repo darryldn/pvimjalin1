@@ -12,9 +12,9 @@ package springstuff.json;
 public class ComponentStateJson {
     
     private String component;
-    private String state;
+    private Object state;
 
-    public ComponentStateJson(String component, String state) {
+    public ComponentStateJson(String component, Object state) {
         this.component = component;
         this.state = state;
     }
@@ -27,11 +27,11 @@ public class ComponentStateJson {
         this.component = component;
     }
 
-    public String getState() {
+    public Object getState() {
         return state;
     }
 
-    public void setState(String state) {
+    public void setState(Object state) {
         this.state = state;
     }
     
