@@ -9,7 +9,7 @@ import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessageChatPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramMessageContentPOJO;
 import id.dni.pvim.ext.telegram.pojo.TelegramUpdateObjPOJO;
-import id.dni.pvim.ext.telegram.repo.ISlmUserRepository;
+import id.dni.pvim.ext.repo.db.ISlmUserRepository;
 import id.dni.pvim.ext.telegram.repo.ITelegramSuscribersRepository;
 import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
 import id.dni.pvim.ext.telegram.repo.spec.TelegramSubscribersByChatIDSpec;
