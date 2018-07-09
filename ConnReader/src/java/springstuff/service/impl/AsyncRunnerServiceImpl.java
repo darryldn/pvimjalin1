@@ -12,7 +12,20 @@ import org.springframework.stereotype.Service;
 import springstuff.service.AsyncRunnerService;
 
 /**
- *
+ * Simple class to run custom code in Async mode
+ * DO NOT USE ExecutorService in WAR / EAR / EJB context. This is because the thread is
+ * not managed by the container!! EJB 3.1 has @Asynchronous annotation. Spring has
+ * @Async annotation which does the same thing.
+ * 
+ * This class must be called via Spring IoC container. As such, 
+ * doing this:
+ * AsyncRunnerServiceImpl impl = new  AsyncRunnerServiceImpl();
+ * impl.run(runnable);
+ * 
+ * won't work!
+ * Inject the instance via @Autowired / @Inject (they're the same)
+ * and call run via that.
+ * 
  * @author darryl.sulistyan
  */
 @Service
