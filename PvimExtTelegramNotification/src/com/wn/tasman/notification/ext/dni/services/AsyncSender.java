@@ -14,6 +14,23 @@ import java.util.concurrent.Future;
  */
 public interface AsyncSender {
     
+    /**
+     * Performs asynchronous call of callable. The result is later put into
+     * Future object.
+     * 
+     * When this function is called, it immediately exit without callable completed
+     * 
+     * To wait until callable finishes, you can invoke Future.get function.
+     * It will wait until callable finishes.
+     * 
+     * Async call should be done this way, not using ExecutorService because
+     * the thread from local ExecutorService is not managed by the container and
+     * will interfere with Wildfly as a whole.
+     * 
+     * @param <T>
+     * @param callable
+     * @return 
+     */
     public <T> Future<T> doAsync(Callable<T> callable);
     
 }
