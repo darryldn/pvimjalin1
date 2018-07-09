@@ -32,7 +32,9 @@ import springstuff.service.DeviceComponentService;
 import springstuff.service.RemoteDataRepositoryService;
 
 /**
- *
+ * Service to send component information periodically to firebase server.
+ * component information is the broken components in the ATM.
+ * 
  * @author darryl.sulistyan
  */
 @Service
@@ -40,19 +42,7 @@ public class DeviceComponentServiceImpl implements DeviceComponentService {
     
     private IDBMachineBasedataRepository machineBasedataRepo;
     private IComponentStateRepository componentStateRepo;
-//    private String parseServerUrl;
-//    private String parseServerTimeout;
     private RemoteDataRepositoryService remoteDataRepositoryService;
-    
-//    @Value("${device.component.parse_server_url}")
-//    public void setParseServerUrl(String parseServerUrl) {
-//        this.parseServerUrl = parseServerUrl;
-//    }
-//    
-//    @Value("${device.component.parse_server_url.timeout}")
-//    public void setParseServerTimeout(String parseServerTimeout) {
-//        this.parseServerTimeout = parseServerTimeout;
-//    }
     
     @Autowired
     public void setComponentStateRepository(IComponentStateRepository repo) {
@@ -65,8 +55,8 @@ public class DeviceComponentServiceImpl implements DeviceComponentService {
     }
     
     @Autowired
-    @Qualifier("simpleurlRemoteDataRepositoryService")
-//    @Qualifier("firebaseRemoteDataRepositoryService")
+//    @Qualifier("simpleurlRemoteDataRepositoryService")
+    @Qualifier("firebaseRemoteDataRepositoryService")
     public void setRemoteDataRepositoryService(RemoteDataRepositoryService s) {
         this.remoteDataRepositoryService = s;
     }
@@ -199,7 +189,7 @@ public class DeviceComponentServiceImpl implements DeviceComponentService {
         } catch (PvExtPersistenceException ex) {
             throw ex;
             
-        } catch (/*IOException | */RemoteRepositoryException ex) {
+        } catch (RemoteRepositoryException ex) {
             throw new PvExtPersistenceException(ex);
             
         }

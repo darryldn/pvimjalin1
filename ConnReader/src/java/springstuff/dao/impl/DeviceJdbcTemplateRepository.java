@@ -6,12 +6,12 @@
 package springstuff.dao.impl;
 
 import id.dni.pvim.ext.repo.ISpecification;
+import id.dni.pvim.ext.repo.db.IDeviceRepository;
+import id.dni.pvim.ext.repo.db.spec.impl.GetDeviceByIdSpecification;
+import id.dni.pvim.ext.repo.db.vo.DeviceVo;
 import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
 import id.dni.pvim.ext.repo.db.vo.ITableVoFactory;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
-import id.dni.pvim.ext.repo.db.ISlmUserRepository;
-import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
-import id.dni.pvim.ext.telegram.repo.spec.SlmUserIsMobileExistSpec;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
@@ -25,43 +25,40 @@ import springstuff.dao.util.GenericSqlJdbcTemplateRepository;
  *
  * @author darryl.sulistyan
  */
-@Repository("SlmUserRepository")
-public class SlmUserJdbcTemplateRepository implements ISlmUserRepository {
+@Repository("DeviceJdbcTemplateRepository")
+public class DeviceJdbcTemplateRepository implements IDeviceRepository {
 
-    private DataSource pvimDS;
+    private DataSource pvDS;
     private JdbcTemplate jdbcTemplate;
     private GenericSqlJdbcTemplateRepository repo;
     
     @Autowired
-    @Qualifier(value = "pvimDataSource")
-    public void setPvimDS(DataSource pvimDS) {
-        this.pvimDS = pvimDS;
-        this.jdbcTemplate = new JdbcTemplate(pvimDS);
+    @Qualifier(value = "pvDataSource")
+    public void setPvimDS(DataSource pvDS) {
+        this.pvDS = pvDS;
+        this.jdbcTemplate = new JdbcTemplate(pvDS);
         repo = new GenericSqlJdbcTemplateRepository(jdbcTemplate, new ITableVoFactory() {
             @Override
             public ITableDescriptorVo create() {
-                return new SlmUserVo();
+                return new DeviceVo();
             }
         });
     }
     
-    public SlmUserJdbcTemplateRepository() {
-    }
-    
     @Override
-    public boolean isMobileExist(String mobile) throws PvExtPersistenceException {
-        List l = this.query(new SlmUserIsMobileExistSpec(mobile));
-        return l != null && !l.isEmpty();
+    public boolean isDeviceExist(String deviceId) throws PvExtPersistenceException {
+        List x = query(new GetDeviceByIdSpecification(deviceId));
+        return (x != null && !x.isEmpty());
     }
 
     @Override
-    public List<SlmUserVo> query(ISpecification specification) throws PvExtPersistenceException {
-        List<SlmUserVo> tel = new ArrayList<>();
-        List<ITableDescriptorVo> tab = repo.query(specification);
-        for (ITableDescriptorVo t : tab) {
-            tel.add((SlmUserVo) t);
+    public List<DeviceVo> query(ISpecification specification) throws PvExtPersistenceException {
+        List<DeviceVo> list = new ArrayList<>();
+        List<ITableDescriptorVo> result = repo.query(specification);
+        for (ITableDescriptorVo i : result) {
+            list.add((DeviceVo) i);
         }
-        return tel;
+        return list;
     }
     
 }

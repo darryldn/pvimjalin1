@@ -9,6 +9,11 @@ import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import id.dni.ext.web.ws.obj.RestTicketDto;
+import id.dni.ext.web.ws.obj.firebase.FbTicketDto;
+import id.dni.pvim.ext.net.TransferTicketDto;
+import id.dni.pvim.ext.repo.db.ITicketRepository;
+import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,15 +22,26 @@ import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import springstuff.exceptions.RemoteRepositoryException;
 import springstuff.json.ComponentStateJson;
 import springstuff.json.DeviceComponentStateJson;
-import springstuff.json.firebase.FbDeviceJson;
+import id.dni.ext.web.ws.obj.firebase.FbDeviceJson;
+import id.dni.ext.web.ws.obj.firebase.FbPvimSlmUserJson;
+import id.dni.pvim.ext.repo.db.ISlmUserRepository;
+import id.dni.pvim.ext.repo.db.spec.impl.GetAllPvimUsersSpecification;
+import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
+import springstuff.model.PvimTicketVo;
 import springstuff.service.RemoteDataRepositoryService;
 import springstuff.service.firebase.FirebaseDatabaseReferenceService;
+import springstuff.dao.IPvimTicketMonitorRepository;
 
 /**
+ * This class assumes that PVIM webservice already works correctly. No need to
+ * change the isSuccess in pvimTicketMonitorRepository
+ * 
+ * Class to send data to firebase server
  *
  * @author darryl.sulistyan
  */
@@ -33,13 +49,26 @@ import springstuff.service.firebase.FirebaseDatabaseReferenceService;
 @Qualifier("firebaseRemoteDataRepositoryService")
 public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataRepositoryService {
 
+    // firebase db reference
     private FirebaseDatabaseReferenceService firebaseDB;
+    
+//    private ITicketRepository ticketRepository; // tiket repository in PVIM
+    
+    // repository to monitor whether pvim ticket webservice is error or not
+    private IPvimTicketMonitorRepository pvimTicketMonitorRepository; // ticket repository in firebase
+    
+    // repository for SLM_USER table in pvim database
+    private ISlmUserRepository pvimSlmUserRepository;
+    
+//    private CacheService cacheService;
 
     private String gpsFirebaseDBPath;
     private String machineStatusFirebaseDBPath;
-
+    private String ticketsFirebaseDBPath;
+    private String pvimSlmUserFirebaseDBPath;
+    private String ticketsNotifFirebaseDBPath;
+    
 //    private AsyncRunnerService asyncService;
-
     private int maxWaitTimeForQueryCompletion;
 
     @Value("${firebase.database.geofire.root}")
@@ -52,16 +81,51 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         this.machineStatusFirebaseDBPath = path;
     }
 
+    @Value("${firebase.database.ticket.root}")
+    public void setTicketsFirebaseDBPath(String path) {
+        this.ticketsFirebaseDBPath = path;
+    }
+    
+    @Value("${firebase.database.ticketnotiftrigger.root}")
+    public void setTicketsNotifFirebaseDBPath(String path) {
+        this.ticketsNotifFirebaseDBPath = path;
+    }
+    
+    @Value("${firebase.database.slmuser.root}")
+    public void setPvimSlmUserFirebaseDBPath(String path) {
+        this.pvimSlmUserFirebaseDBPath = path;
+    }
+
+    @Autowired
+    public void setRemoteTicketRepository(IPvimTicketMonitorRepository remote) {
+        this.pvimTicketMonitorRepository = remote;
+    }
+
+    // unused function
+//    @Autowired
+    public void setTicketRepository(ITicketRepository repo) {
+//        this.ticketRepository = repo;
+    }
+
     @Autowired
     public void setFirebaseDB(FirebaseDatabaseReferenceService db) {
         this.firebaseDB = db;
     }
+    
+    @Autowired
+    public void setPvimSlmUserRepository(ISlmUserRepository repo) {
+        this.pvimSlmUserRepository = repo;
+    }
+    
+//    @Autowired(required = false)
+//    public void setCacheService(CacheService cache) {
+//        this.cacheService = cache;
+//    }
 
 //    @Autowired
 //    public void setAsyncRunnerService(AsyncRunnerService service) {
 //        this.asyncService = service;
 //    }
-
     @Value("${firebase.database.max_query_wait_time}")
     public void setMaxWaitTimeForQueryCompletion(String time) {
         try {
@@ -76,6 +140,120 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         } catch (NumberFormatException ex) {
             this.maxWaitTimeForQueryCompletion = 10000;
         }
+    }
+
+    /**
+     * Remove tickets in firebase database.
+     * This function assumes that the structure is:
+     * /tickets {
+     *      /<ticket ID>: {
+     *          24 values, see RestTicketDto class for entries.
+     *      },
+     *      ....
+     * }
+     * Ticket ID =/= ticket number. Ticket ID is mapped to TICKET_ID column in TICKET table
+     * while ticket number is mapped to TICKET_NUMBER.
+     * Ticket number contains dot (.) character which is forbidden in path (or object key) in
+     * firebase. TicketID is purely alphanumeric 32 digit.
+     * 
+     * This function just loops for every tickets, and deletes entry under /tickets/<ticketID>/*
+     * 
+     * @param tickets
+     * @throws RemoteRepositoryException 
+     */
+    @Override
+    public void removeTickets(List<TransferTicketDto> tickets) throws RemoteRepositoryException {
+        final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.ticketsFirebaseDBPath);
+        final IPvimTicketMonitorRepository remoteRepo = this.pvimTicketMonitorRepository;
+
+        for (TransferTicketDto ticket : tickets) {
+            RestTicketDto rest = RestTicketDto.convert(ticket.getTicketMap());
+            final String ticketId = ticket.getTicketId();
+            db.child(ticketId).removeValue( // ticketNumber contains (.) character, forbidden by Firebase as path!
+                    new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(DatabaseError de, DatabaseReference dr) {
+                    if (de == null) {
+                        try {
+//                            remoteRepo.removeTicket(remoteRepo.getTicket(rest.getTicketNumber()));
+                            remoteRepo.removeTicket(remoteRepo.getTicket(ticketId));
+                        } catch (PvExtPersistenceException ex) {
+                            Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    } else {
+                        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+                    }
+                }
+            });
+
+        }
+    }
+
+    @Override
+    @Scheduled(fixedRateString = "${TicketService.firebase.update.timestamp.interval}")
+    public void periodicUpdateLastupdate() {
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, ">> periodicUpdateLastupdate()");
+        try {
+            List<PvimTicketVo> tickets = pvimTicketMonitorRepository.getAllTickets();
+
+            if (!tickets.isEmpty()) {
+                final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.ticketsFirebaseDBPath);
+                for (PvimTicketVo ticket : tickets) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - reading ticket: {0}", ticket);
+                    if (ticket.isSuccessfullyUpdated()) {
+                        final long lastupdated = System.currentTimeMillis();
+                    ticket.setLastupdated(System.currentTimeMillis());
+//                    ticketsDb.child(ticket.getTicketNumber()).child("lastupdated").setValue(ticket.getLastupdated(), 
+                        db.child(ticket.getTicketId()).child("lastupdated").setValue(lastupdated,
+                                new DatabaseReference.CompletionListener() {
+                            @Override
+                            public void onComplete(DatabaseError de, DatabaseReference dr) {
+                                if (de == null) {
+                                    try {
+                                        pvimTicketMonitorRepository.updateTicket(ticket);
+                                    } catch (PvExtPersistenceException ex) {
+                                        Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                } else {
+                                    Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+                                }
+                            }
+                        });
+                    }
+                }
+            } else {
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - ticket is empty!");
+            }
+
+        } catch (PvExtPersistenceException ex) {
+            Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "<< periodicUpdateLastupdate()");
+        }
+
+    }
+
+    private static class DumbFirebaseCompletionListener implements DatabaseReference.CompletionListener {
+
+        private final String message;
+
+        public DumbFirebaseCompletionListener(String message) {
+            this.message = message;
+        }
+
+        public DumbFirebaseCompletionListener() {
+            this(null);
+        }
+
+        @Override
+        public void onComplete(DatabaseError de, DatabaseReference dr) {
+            if (de != null) {
+                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+            } else if (this.message != null) {
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, this.message);
+            }
+        }
+
     }
 
     @Override
@@ -101,26 +279,28 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
 //                        // this is async call
 //                        // geofire does not support bulk uploads, unfortunatelly
 //                        // because it is not meant to be used this way!!
-                geoFire.setLocation(device.getDeviceid(),
-                        new GeoLocation(device.getLocation().getLatitude(),
-                                device.getLocation().getLongitude()),
-                        new GeoFire.CompletionListener() {
-                    @Override
-                    public void onComplete(String string, DatabaseError de) {
-                        if (de != null) {
-                            Logger.getLogger(this.getClass().getName()).log(Level.WARNING,
-                                    "Failed send data on device: {0} with error: {1}",
-                                    new Object[]{device.getDeviceid(), de});
-                        } else {
-                            Logger.getLogger(this.getClass().getName()).log(Level.INFO,
-                                    "Device {0} is saved successfully!",
-                                    new Object[]{device.getDeviceid()});
+                if (device.getLocation() != null) {
+                    geoFire.setLocation(device.getDeviceid(),
+                            new GeoLocation(device.getLocation().getLatitude(),
+                                    device.getLocation().getLongitude()),
+                            new GeoFire.CompletionListener() {
+                        @Override
+                        public void onComplete(String string, DatabaseError de) {
+                            if (de != null) {
+                                Logger.getLogger(this.getClass().getName()).log(Level.WARNING,
+                                        "Failed send data on device: {0} with error: {1}",
+                                        new Object[]{device.getDeviceid(), de});
+                            } else {
+                                Logger.getLogger(this.getClass().getName()).log(Level.INFO,
+                                        "Device {0} is saved successfully!",
+                                        new Object[]{device.getDeviceid()});
+                            }
+    //                                synchronized(lock) {
+    //                                    lock.notifyAll();
+    //                                }
                         }
-//                                synchronized(lock) {
-//                                    lock.notifyAll();
-//                                }
-                    }
-                });
+                    });
+                }
 //                        
 //                        // method must block here.
 //                        // if this does not block, the guard of number of threads
@@ -157,7 +337,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                     }
                 }
                 fbDevice.setStatus(deviceStatus);
-
+                
                 fbDevices.put(fbDevice.getDeviceID(), fbDevice);
 
             }
@@ -171,19 +351,22 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
 //                public void run() {
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - devices: {0}", fbDevices);
 //                    
-            db.updateChildren(fbDevices, new DatabaseReference.CompletionListener() {
-                @Override
-                public void onComplete(DatabaseError de, DatabaseReference dr) {
-                    if (de != null) {
-                        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
-                    } else {
-                        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Successfully update ATM information!");
-                    }
-//                            synchronized(lock) {
-//                                lock.notifyAll();
-//                            }
-                }
-            });
+
+            db.updateChildren(fbDevices, new DumbFirebaseCompletionListener("Successfully update ATM information!"));
+
+//            ticketsDb.updateChildren(fbDevices, new DatabaseReference.CompletionListener() {
+//                @Override
+//                public void onComplete(DatabaseError de, DatabaseReference dr) {
+//                    if (de != null) {
+//                        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+//                    } else {
+//                        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Successfully update ATM information!");
+//                    }
+////                            synchronized(lock) {
+////                                lock.notifyAll();
+////                            }
+//                }
+//            });
 //                    synchronized(lock) {
 //                        try {
 //                            lock.wait(maxWaitQuery);
@@ -195,6 +378,126 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
 //            });
         }
 
+    }
+
+    Map<String, Object> constructFbTickets(List<TransferTicketDto> tickets) {
+        Map<String, Object> fbTickets = new HashMap<>();
+
+        for (TransferTicketDto ticket : tickets) {
+            FbTicketDto fbTicket = new FbTicketDto();
+            RestTicketDto rest = RestTicketDto.convert(ticket.getTicketMap());
+//            fbTicket.setData(rest);
+            FbTicketDto.setData(fbTicket, rest);
+            fbTicket.setLastupdated(ticket.getLastupdated());
+//            fbTicket.setPreviousNotes(rest.getNote());
+            fbTicket.setEngineer_id(null); // MUST BE NULL! will be set to non null by vendor app
+            fbTicket.setTicketId(ticket.getTicketId());
+            fbTickets.put(fbTicket.getTicketId(), fbTicket);
+        }
+
+        return fbTickets;
+    }
+    
+    private void setEngineerIdInAtmFirebase(DatabaseReference ref, String machineNumber, String key, String assigned) {
+        ref.child(machineNumber).child(key).setValue(assigned, 
+                new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError de, DatabaseReference dr) {
+                if (de != null) {
+                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+            }
+            }
+        });
+    }
+
+    @Override
+    public void sendTickets(final List<TransferTicketDto> tickets) throws RemoteRepositoryException {
+        if (tickets == null || tickets.isEmpty()) {
+            return;
+        }
+        
+        final DatabaseReference ticketsDb = this.firebaseDB.getDatabaseReference(this.ticketsFirebaseDBPath);
+        final DatabaseReference atmDb = this.firebaseDB.getDatabaseReference(this.machineStatusFirebaseDBPath);
+        final DatabaseReference ticketNotifDb = this.firebaseDB.getDatabaseReference(this.ticketsNotifFirebaseDBPath);
+        
+        final Map<String, Object> fbTickets = constructFbTickets(tickets);
+
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - sendTickets, fbTickets: {0}", fbTickets);
+
+        Map<String, Object> fbListAtmTicketsMap = new HashMap<>();
+        
+        // onComplete is called after all onChildListener hooks have completed.
+        // This includes those in FirebaseDBListener service.
+        // so, move these here outside onComplete because they will be overriden in onChild listener callbacks!
+        for (TransferTicketDto ticket : tickets) {
+            RestTicketDto rest = RestTicketDto.convert(ticket.getTicketMap());
+            setEngineerIdInAtmFirebase(atmDb, rest.getMachineNumber(), "engineer_id", rest.getAssignee());
+            setEngineerIdInAtmFirebase(atmDb, rest.getMachineNumber(), "engineerID", rest.getAssignee());
+            
+            Map<String, Boolean> fbTicketPerAtm;
+            if (fbListAtmTicketsMap.containsKey(rest.getMachineNumber())) {
+                fbTicketPerAtm = (Map<String, Boolean>) fbListAtmTicketsMap.get(rest.getMachineNumber());
+            } else {
+                fbTicketPerAtm = new HashMap<>();
+                fbListAtmTicketsMap.put(rest.getMachineNumber(), fbTicketPerAtm);
+            }
+            fbTicketPerAtm.put(ticket.getTicketId(), Boolean.TRUE);
+            
+            PvimTicketVo pvimTicket = new PvimTicketVo();
+
+            // set to true because PVIM already successfully executed the code
+            // so, the problem will be only in firebase side.
+            pvimTicket.setSuccessfullyUpdated(true);
+//            pvimTicket.setTicketNumber(rest.getTicketNumber());
+            pvimTicket.setTicketId(ticket.getTicketId());
+            try {
+                pvimTicketMonitorRepository.updateTicket(pvimTicket);
+            } catch (PvExtPersistenceException ex) {
+                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        ticketsDb.updateChildren(fbTickets, new DumbFirebaseCompletionListener());
+        ticketNotifDb.updateChildren(fbListAtmTicketsMap, new DumbFirebaseCompletionListener());
+
+    }
+    
+    @Override
+    @Scheduled(fixedRateString = "${PvimSlmUser.firebase.update.timestamp.interval}")
+    public void periodicSendPvimSlmUserData() {
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO, ">> periodicSendPvimSlmUserData()");
+        try {
+            final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.pvimSlmUserFirebaseDBPath);
+            List<SlmUserVo> usersVo = this.pvimSlmUserRepository.query(new GetAllPvimUsersSpecification());
+            Map<String, Object> fbUsers = new HashMap<>();
+            for (SlmUserVo userVo : usersVo) {
+                FbPvimSlmUserJson fbUser = new FbPvimSlmUserJson();
+                fbUser.setEmail(userVo.getEmail());
+                fbUser.setLoginName(userVo.getLoginName());
+                fbUser.setMobile(userVo.getMobile());
+                fbUser.setUserId(userVo.getUserID());
+                fbUser.setUserType(userVo.getUserType());
+                fbUsers.put(fbUser.getUserId(), fbUser); // don't use login name
+                                                         // because login name can have dot (.) character
+                                                         // which is forbidden by firebase.
+                                                         // userid is autogenerated and guaranteed alphanumeric ONLY
+            }
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - reading users from db: {0}", fbUsers);
+            db.updateChildren(fbUsers, new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(DatabaseError de, DatabaseReference dr) {
+                    if (de != null) {
+                        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, 
+                                null, de);
+                    }
+                }
+            });
+            
+        } catch (PvExtPersistenceException ex) {
+            Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "<< periodicSendPvimSlmUserData()");
+        }
     }
 
 }

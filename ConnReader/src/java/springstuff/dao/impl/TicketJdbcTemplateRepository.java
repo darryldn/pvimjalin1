@@ -6,12 +6,11 @@
 package springstuff.dao.impl;
 
 import id.dni.pvim.ext.repo.ISpecification;
+import id.dni.pvim.ext.repo.db.ITicketRepository;
 import id.dni.pvim.ext.repo.db.vo.ITableDescriptorVo;
 import id.dni.pvim.ext.repo.db.vo.ITableVoFactory;
+import id.dni.pvim.ext.repo.db.vo.TicketVo;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
-import id.dni.pvim.ext.repo.db.ISlmUserRepository;
-import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
-import id.dni.pvim.ext.telegram.repo.spec.SlmUserIsMobileExistSpec;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
@@ -25,8 +24,8 @@ import springstuff.dao.util.GenericSqlJdbcTemplateRepository;
  *
  * @author darryl.sulistyan
  */
-@Repository("SlmUserRepository")
-public class SlmUserJdbcTemplateRepository implements ISlmUserRepository {
+@Repository("TicketJdbcTemplateRepository")
+public class TicketJdbcTemplateRepository implements ITicketRepository {
 
     private DataSource pvimDS;
     private JdbcTemplate jdbcTemplate;
@@ -40,28 +39,23 @@ public class SlmUserJdbcTemplateRepository implements ISlmUserRepository {
         repo = new GenericSqlJdbcTemplateRepository(jdbcTemplate, new ITableVoFactory() {
             @Override
             public ITableDescriptorVo create() {
-                return new SlmUserVo();
+                return new TicketVo();
             }
         });
     }
     
-    public SlmUserJdbcTemplateRepository() {
+    public TicketJdbcTemplateRepository() {
+        
     }
     
     @Override
-    public boolean isMobileExist(String mobile) throws PvExtPersistenceException {
-        List l = this.query(new SlmUserIsMobileExistSpec(mobile));
-        return l != null && !l.isEmpty();
-    }
-
-    @Override
-    public List<SlmUserVo> query(ISpecification specification) throws PvExtPersistenceException {
-        List<SlmUserVo> tel = new ArrayList<>();
+    public List<TicketVo> query(ISpecification specification) throws PvExtPersistenceException {
+        List<TicketVo> result = new ArrayList<>();
         List<ITableDescriptorVo> tab = repo.query(specification);
-        for (ITableDescriptorVo t : tab) {
-            tel.add((SlmUserVo) t);
+        for (ITableDescriptorVo s : tab) {
+            result.add((TicketVo) s);
         }
-        return tel;
+        return result;
     }
     
 }

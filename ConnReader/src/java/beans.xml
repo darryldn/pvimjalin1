@@ -47,7 +47,13 @@
     <!--<util:properties id="applicationProps" location="application.properties" />
     <context:property-placeholder properties-ref="applicationProps" />-->
     <!--<context:property-placeholder location="classpath:application.properties" />-->
-    <context:property-placeholder location="classpath:telegram.properties, classpath:application.properties" />
+    <context:property-placeholder location=
+        "
+        classpath:telegram.properties, 
+        classpath:application.properties, 
+        classpath:firebase.properties
+        " 
+    />
     <bean id="getupdaterservice" class="springstuff.service.impl.TelegramGetUpdaterServiceImpl"></bean>
     
     <context:component-scan base-package="springstuff.service.impl" />

@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions targetNamespace="http://ticket.wsi.inbound.econnect.wn.com" xmlns:soapenc11="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://ticket.wsi.inbound.econnect.wn.com" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap11="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="http://wsi.inbound.econnect.wn.com" xmlns:soapenc12="http://www.w3.org/2003/05/soap-encoding">
+  <wsdl:types>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://ticket.wsi.inbound.econnect.wn.com">
+<xsd:complexType name="TicketDto">
+<xsd:sequence>
+<xsd:element minOccurs="0" name="ETA" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="assignTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="assignee" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="assigneeGroup" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="categoryName" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="closeTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="createTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="description" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="dispatchTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="expectedFixTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="expectedResponseTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="fixTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="incidentName" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="machineNumber" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="note" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="priority" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="refId" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="reportedTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="startWorkingTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="summary" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="suspendBeginTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="suspendEndTime" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="ticketNumber" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="ticketState" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="createTicket">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="in0" nillable="true" type="tns:TicketDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="createTicketResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="out" nillable="true" type="tns:TicketDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="PvimWSException" type="ns1:PvimWSException"/>
+<xsd:element name="getTicketByNumber">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="in0" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="getTicketByNumberResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="out" nillable="true" type="tns:TicketDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="getOpenTickets">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="in0" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:complexType name="ArrayOfTicketDto">
+<xsd:sequence>
+<xsd:element maxOccurs="unbounded" minOccurs="0" name="TicketDto" nillable="true" type="tns:TicketDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="getOpenTicketsResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="out" nillable="true" type="tns:ArrayOfTicketDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="updateTicket">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="in0" nillable="true" type="tns:TicketDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="updateTicketResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="out" nillable="true" type="tns:TicketDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="getTicketByExtRefId">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="in0" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="getTicketByExtRefIdResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element maxOccurs="1" minOccurs="1" name="out" nillable="true" type="tns:TicketDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+</xsd:schema>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://wsi.inbound.econnect.wn.com">
+<xsd:complexType name="PvimWSException">
+<xsd:sequence>
+<xsd:element minOccurs="0" name="errorCode" nillable="true" type="xsd:string"/>
+<xsd:element minOccurs="0" name="errorMsg" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="createTicketRequest">
+    <wsdl:part name="parameters" element="tns:createTicket">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="updateTicketResponse">
+    <wsdl:part name="parameters" element="tns:updateTicketResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="createTicketResponse">
+    <wsdl:part name="parameters" element="tns:createTicketResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getTicketByExtRefIdResponse">
+    <wsdl:part name="parameters" element="tns:getTicketByExtRefIdResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="PvimWSException">
+    <wsdl:part name="PvimWSException" element="tns:PvimWSException">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getTicketByNumberRequest">
+    <wsdl:part name="parameters" element="tns:getTicketByNumber">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getOpenTicketsResponse">
+    <wsdl:part name="parameters" element="tns:getOpenTicketsResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getTicketByNumberResponse">
+    <wsdl:part name="parameters" element="tns:getTicketByNumberResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getOpenTicketsRequest">
+    <wsdl:part name="parameters" element="tns:getOpenTickets">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="getTicketByExtRefIdRequest">
+    <wsdl:part name="parameters" element="tns:getTicketByExtRefId">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="updateTicketRequest">
+    <wsdl:part name="parameters" element="tns:updateTicket">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="ITicketWebServicePortType">
+    <wsdl:operation name="createTicket">
+      <wsdl:input name="createTicketRequest" message="tns:createTicketRequest">
+    </wsdl:input>
+      <wsdl:output name="createTicketResponse" message="tns:createTicketResponse">
+    </wsdl:output>
+      <wsdl:fault name="PvimWSException" message="tns:PvimWSException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getTicketByNumber">
+      <wsdl:input name="getTicketByNumberRequest" message="tns:getTicketByNumberRequest">
+    </wsdl:input>
+      <wsdl:output name="getTicketByNumberResponse" message="tns:getTicketByNumberResponse">
+    </wsdl:output>
+      <wsdl:fault name="PvimWSException" message="tns:PvimWSException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getOpenTickets">
+      <wsdl:input name="getOpenTicketsRequest" message="tns:getOpenTicketsRequest">
+    </wsdl:input>
+      <wsdl:output name="getOpenTicketsResponse" message="tns:getOpenTicketsResponse">
+    </wsdl:output>
+      <wsdl:fault name="PvimWSException" message="tns:PvimWSException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="updateTicket">
+      <wsdl:input name="updateTicketRequest" message="tns:updateTicketRequest">
+    </wsdl:input>
+      <wsdl:output name="updateTicketResponse" message="tns:updateTicketResponse">
+    </wsdl:output>
+      <wsdl:fault name="PvimWSException" message="tns:PvimWSException">
+    </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getTicketByExtRefId">
+      <wsdl:input name="getTicketByExtRefIdRequest" message="tns:getTicketByExtRefIdRequest">
+    </wsdl:input>
+      <wsdl:output name="getTicketByExtRefIdResponse" message="tns:getTicketByExtRefIdResponse">
+    </wsdl:output>
+      <wsdl:fault name="PvimWSException" message="tns:PvimWSException">
+    </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="ITicketWebServiceHttpBinding" type="tns:ITicketWebServicePortType">
+    <wsdlsoap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="createTicket">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="createTicketRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="createTicketResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="PvimWSException">
+        <wsdlsoap:fault name="PvimWSException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getTicketByNumber">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="getTicketByNumberRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="getTicketByNumberResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="PvimWSException">
+        <wsdlsoap:fault name="PvimWSException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getOpenTickets">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="getOpenTicketsRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="getOpenTicketsResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="PvimWSException">
+        <wsdlsoap:fault name="PvimWSException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="updateTicket">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="updateTicketRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="updateTicketResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="PvimWSException">
+        <wsdlsoap:fault name="PvimWSException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getTicketByExtRefId">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="getTicketByExtRefIdRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="getTicketByExtRefIdResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="PvimWSException">
+        <wsdlsoap:fault name="PvimWSException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ITicketWebService">
+    <wsdl:port name="ITicketWebServiceHttpPort" binding="tns:ITicketWebServiceHttpBinding">
+      <wsdlsoap:address location="http://10.204.218.165:8080/tasman_ws/services/TicketService"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
