@@ -7,8 +7,8 @@ package id.dni.pv.ext.ws.dispatcher;
 
 import com.google.gson.Gson;
 import id.dni.pv.ext.exception.PvWsException;
-import id.dni.pv.ext.web.servlet.in.PvWsDefaultRequest;
-import id.dni.pv.ext.web.servlet.in.PvWsDefaultResponse;
+import id.dni.pvim.ext.dto.PvWsDefaultRequest;
+import id.dni.pvim.ext.dto.PvWsDefaultResponse;
 import id.dni.pvim.ext.web.in.Commons;
 import java.io.IOException;
 import java.io.InputStream;

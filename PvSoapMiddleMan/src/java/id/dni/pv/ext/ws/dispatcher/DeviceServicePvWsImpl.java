@@ -5,8 +5,8 @@
  */
 package id.dni.pv.ext.ws.dispatcher;
 
-import id.dni.pv.ext.web.servlet.in.PvWsDefaultResponse;
-import id.dni.pv.ext.ws.dispatcher.internal.PvWsCassette;
+import id.dni.pvim.ext.dto.PvWsDefaultResponse;
+import id.dni.pvim.ext.dto.PvWsCassette;
 import id.dni.pvim.ext.web.in.Commons;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
