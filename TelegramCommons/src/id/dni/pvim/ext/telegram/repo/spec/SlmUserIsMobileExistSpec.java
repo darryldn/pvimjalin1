@@ -6,7 +6,7 @@
 package id.dni.pvim.ext.telegram.repo.spec;
 
 import id.dni.pvim.ext.repo.db.spec.ISqlSpecification;
-import id.dni.pvim.ext.telegram.repo.db.vo.SlmUserVo;
+import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
 
 /**
  *

@@ -7,8 +7,8 @@ package id.dni.pvim.ext.telegram.repo.sim;
 
 import id.dni.pvim.ext.repo.ISpecification;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
-import id.dni.pvim.ext.telegram.repo.ISlmUserRepository;
-import id.dni.pvim.ext.telegram.repo.db.vo.SlmUserVo;
+import id.dni.pvim.ext.repo.db.ISlmUserRepository;
+import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
 import java.util.Collections;
 import java.util.List;
 
