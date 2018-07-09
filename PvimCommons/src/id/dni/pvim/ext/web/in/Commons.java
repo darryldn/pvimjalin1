@@ -6,10 +6,15 @@
 package id.dni.pvim.ext.web.in;
 
 import com.google.gson.Gson;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.UUID;
@@ -21,7 +26,7 @@ import java.util.logging.Logger;
  * @author darryl.sulistyan
  */
 public class Commons {
-    private static final Gson GSON = new Gson();
+//    private static final Gson GSON = new Gson();
     
     /**
      * Creates a random UUID with length 32 characters
@@ -117,10 +122,44 @@ public class Commons {
     public static void sendAsJson(
         PrintWriter out, 
         Object obj) throws IOException {
-
-        String res = GSON.toJson(obj);
+        Gson gson = new Gson();
+        String res = gson.toJson(obj);
         out.print(res);
         out.flush();
+    }
+    
+    public static String postJsonRequest(String urlStr, int timeout, String jsonData) throws IOException {
+        try {
+            
+            Logger.getLogger(Commons.class.getName()).log(Level.INFO, " - Send request to url: {0}", urlStr);
+            Logger.getLogger(Commons.class.getName()).log(Level.INFO, " - Sending request body: {0}", jsonData);
+            
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+            conn.setConnectTimeout(timeout);
+            conn.setReadTimeout(timeout);
+            conn.setRequestMethod("POST");
+            try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream()))) {
+                out.write(jsonData);
+            }
+            
+            String returnData;
+            try ( // Read the response
+                    InputStream inputStream = conn.getInputStream()) {
+                returnData = Commons.inputStreamToString(inputStream);
+            }
+            
+            Logger.getLogger(Commons.class.getName()).log(Level.INFO,
+                    " - obtain request from parse server: {0}", returnData);
+            return returnData;
+            
+        } catch (MalformedURLException ex) {
+            throw ex;
+        } catch (IOException ex) {
+            throw ex;
+        }
     }
     
     public static Properties loadConfig(Class<?> owner, String source) throws IOException {
