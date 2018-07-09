@@ -208,7 +208,7 @@ public class TelegramNotificationMessageListener implements MessageListener {
      * To insert the record to TICKET_HISTOY, call the following function:
      * NotificationRecordHelper.getInstance().recordNotificationToHistory(nr, statusId);
      * 
-     * @param receiver any string, will be put into RECEIVER column in NOTIFICATION_RECORD
+     * @param receiver any string, will be put into RECEIVER column in NOTIFICATION_RECORD. This MAY NOT NULL!
      * @param context the content of the notification
      * @param ticketId
      * @return 
