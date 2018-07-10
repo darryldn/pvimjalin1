@@ -5,6 +5,8 @@
  */
 package id.dni.pvim.ext.dto;
 
+import java.util.Objects;
+
 /**
  *
  * @author darryl.sulistyan
@@ -126,6 +128,79 @@ public class PvWsCassette {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 23 * hash + Objects.hashCode(this.cassetteExchanged);
+        hash = 23 * hash + Objects.hashCode(this.cassetteId);
+        hash = 23 * hash + Objects.hashCode(this.cassetteType);
+        hash = 23 * hash + Objects.hashCode(this.currency);
+        hash = 23 * hash + Objects.hashCode(this.denomination);
+        hash = 23 * hash + Objects.hashCode(this.deposited);
+        hash = 23 * hash + Objects.hashCode(this.dispensed);
+        hash = 23 * hash + Objects.hashCode(this.filling);
+        hash = 23 * hash + Objects.hashCode(this.physicalPositionName);
+        hash = 23 * hash + Objects.hashCode(this.rejected);
+        hash = 23 * hash + Objects.hashCode(this.remainingTotal);
+        hash = 23 * hash + Objects.hashCode(this.start);
+        hash = 23 * hash + Objects.hashCode(this.status);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PvWsCassette other = (PvWsCassette) obj;
+        if (!Objects.equals(this.cassetteExchanged, other.cassetteExchanged)) {
+            return false;
+        }
+        if (!Objects.equals(this.cassetteId, other.cassetteId)) {
+            return false;
+        }
+        if (!Objects.equals(this.cassetteType, other.cassetteType)) {
+            return false;
+        }
+        if (!Objects.equals(this.currency, other.currency)) {
+            return false;
+        }
+        if (!Objects.equals(this.denomination, other.denomination)) {
+            return false;
+        }
+        if (!Objects.equals(this.deposited, other.deposited)) {
+            return false;
+        }
+        if (!Objects.equals(this.dispensed, other.dispensed)) {
+            return false;
+        }
+        if (!Objects.equals(this.filling, other.filling)) {
+            return false;
+        }
+        if (!Objects.equals(this.physicalPositionName, other.physicalPositionName)) {
+            return false;
+        }
+        if (!Objects.equals(this.rejected, other.rejected)) {
+            return false;
+        }
+        if (!Objects.equals(this.remainingTotal, other.remainingTotal)) {
+            return false;
+        }
+        if (!Objects.equals(this.start, other.start)) {
+            return false;
+        }
+        if (!Objects.equals(this.status, other.status)) {
+            return false;
+        }
+        return true;
     }
     
     
