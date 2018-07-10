@@ -1,7 +1,7 @@
 # pvimjalin1  
 pvim jalin  
   
-Required for PVIM_DNI_Ext  
+Required for compile and running PVIM_DNI_Ext  
 google gson-2.3.1  
   
 apache dbutils  
@@ -44,11 +44,22 @@ TL;DR
 Just grab all libraries from pvim.ear  
   
 For more detailed:  
-jboss-javaee.jar, can be obtained from jboss version 5.1.0 GA  
+jboss-javaee.jar (only for compiling dependency), can be obtained from jboss version 5.1.0 GA  
 mail-1.4.jar, available from pvim.ear  
 rab-server.jar, available from pvim.ear  
 spring*.jar from pvim.ear  
 apache dbutils 1.7  
 hibernate*.jar from pvim.ear  
 gson-2.3.1.jar  
+  
+  
+IDE  
+Netbeans 8.2  
+  
+Output:  
+PVIM_DNI_Ext is an EAR library  
+put PVIM_DNI_Ext.ear in standalone directory in wildfly, the same folder for pvim.ear  
+  
+PvimExtTelegramNotification is a jar library  
+put PvimExtTelegramNotification.jar, FirebaseCommons.jar, PvimCommons.jar and TelegramCommons.jar in pvim.ear lib folder  
   
