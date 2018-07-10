@@ -99,8 +99,13 @@ public class FirebaseCassetteBalanceListenerServiceImpl implements RemoteDataRep
 //            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - handleModification, FbDeviceJson: " + json);
             FbCassetteBalanceJson cassetteBalance = json.getCassette_balance();
             if (cassetteBalance == null || 
-                    cassetteBalance.getTimestamp() == null || cassetteBalance.getTimestamp() == 0 || 
-                    cassetteBalance.getCassettes() == null || cassetteBalance.getCassettes().isEmpty()) {
+                    cassetteBalance.getTimestamp() == null || cassetteBalance.getTimestamp() == 0/* || 
+                    cassetteBalance.getCassettes() == null || cassetteBalance.getCassettes().isEmpty()*/) {
+                // cassetteBalance commented out because if Pvim webservice throws error, the error object is filled
+                // but cassetteBalance will be null, as expected. This can cause a loop.
+                // therefore, just set timestamp null or zero it or remove timestamp to trigger update.
+                // absence of cassetteBalance / err won't trigger update
+                
                 Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - handleModification, cassetteBalance: " + cassetteBalance);
                 requestService(json, deviceId);
                 db.child(deviceId)/*.child("cassette_balance")*/.setValue(json/*.getCassette_balance()*/, 
