@@ -63,3 +63,12 @@ put PVIM_DNI_Ext.ear in standalone directory in wildfly, the same folder for pvi
 PvimExtTelegramNotification is a jar library  
 put PvimExtTelegramNotification.jar, FirebaseCommons.jar, PvimCommons.jar and TelegramCommons.jar in pvim.ear lib folder  
   
+  
+For GpsCsv2PvDBImporter  
+commons-dbutils-1.7.jar  
+jdts-1.2.8.jar  
+log4j-1.2.15.jar  
+commons-csv-1.5.jar  
+JDK 8  
+
+
