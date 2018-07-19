@@ -12,8 +12,11 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
@@ -35,8 +38,12 @@ public class DBImporter {
     private static final String 
             SQL_UPDATE_PV_LATITUDE = "update BASEDATA set value=? where id=? and idtype=0 and reference=999916",
             SQL_UPDATE_PV_LONGITUDE= "update BASEDATA set value=? where id=? and idtype=0 and reference=999915",
+            SQL_UPDATE_PV_ADDRESS= "update BASEDATA set value=? where id=? and idtype=0 and reference=999997",
+            SQL_UPDATE_PV_LOCATION= "update BASEDATA set value=? where id=? and idtype=0 and reference=999992",
             SQL_INSERT_PV_LATITUDE = "insert into BASEDATA values(?, 0, 999916, ?)",
             SQL_INSERT_PV_LONGITUDE= "insert into BASEDATA values(?, 0, 999915, ?)",
+            SQL_INSERT_PV_ADDRESS = "insert into BASEDATA values(?, 0, 999997, ?)",
+            SQL_INSERT_PV_LOCATION= "insert into BASEDATA values(?, 0, 999992, ?)",
             SQL_ID_EXISTS = "select 1 from DEVICE where deviceid=?";
     
     
@@ -89,21 +96,44 @@ public class DBImporter {
             conn = DriverManager.getConnection(this.connectionUrl, username, password);
             conn.setAutoCommit(false);
             in = new BufferedReader(new FileReader(csvInput));
+            List<MachineRecord> machines = new ArrayList<>();
+            
+            Iterable<CSVRecord> csvRecords = CSVFormat.RFC4180.withHeader("NO", "Bank", "ID ATM", "LOKASI " +"(2)", "ALAMAT " +"(3)", 
+                    "Latitude", "Longitude", "Update Date").withFirstRecordAsHeader().parse(in);
+            for (CSVRecord csvRecord : csvRecords) {
+                MachineRecord m = new MachineRecord();
+                
+                m.setBank(csvRecord.get("Bank"));
+                m.setId(csvRecord.get("ID ATM"));
+                m.setLocation(csvRecord.get("LOKASI " +"(2)"));
+                m.setAddress(csvRecord.get("ALAMAT " +"(3)"));
+                m.setLatitude(csvRecord.get("Latitude"));
+                m.setLongitude(csvRecord.get("Longitude"));
+                m.setUpdateDate(csvRecord.get("Update Date"));
+                
+                LOGGER.debug("Reading: m=" + m);
+                machines.add(m);
+            }
             
             QueryRunner runner = new QueryRunner();
             
-            String csv;
-            while ((csv = in.readLine()) != null) {
-                String[] param = csv.split(",");
-                String deviceID = param[0];
-                String latitude = param[1];
-                String longitude = param[2];
+//            String csv;
+            for (MachineRecord machine : machines) {
+//                String[] param = csv.split(",");
+                // NO	Bank	ID ATM	"LOKASI(2)"	"ALAMAT(3)"	Latitude	Longitude	Update Date
+                String deviceID = machine.getId(); //param[2];
+                String location = machine.getLocation(); //param[3];
+                String address = machine.getAddress(); //param[4];
+                String latitude = machine.getLatitude(); //param[5];
+                String longitude = machine.getLongitude(); //param[6];
                 
                 try {
                     Double.parseDouble(latitude);
                     Double.parseDouble(longitude);
                     updateOrInsert(runner, conn, SQL_UPDATE_PV_LATITUDE, SQL_INSERT_PV_LATITUDE, deviceID, latitude);
                     updateOrInsert(runner, conn, SQL_UPDATE_PV_LONGITUDE, SQL_INSERT_PV_LONGITUDE, deviceID, longitude);
+                    updateOrInsert(runner, conn, SQL_UPDATE_PV_ADDRESS, SQL_INSERT_PV_ADDRESS, deviceID, address);
+                    updateOrInsert(runner, conn, SQL_UPDATE_PV_LOCATION, SQL_INSERT_PV_LOCATION, deviceID, location);
                     
                 } catch (NumberFormatException ex) {
                     LOGGER.warn(String.format(
