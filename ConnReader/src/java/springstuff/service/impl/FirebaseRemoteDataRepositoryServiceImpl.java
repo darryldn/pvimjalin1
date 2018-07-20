@@ -9,6 +9,7 @@ import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import id.dni.ext.prop.FirebaseUtil;
 import id.dni.ext.web.ws.obj.RestTicketDto;
 import id.dni.ext.web.ws.obj.firebase.FbTicketDto;
 import id.dni.pvim.ext.net.TransferTicketDto;
@@ -281,7 +282,9 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
 //                        // because it is not meant to be used this way!!
                 if (device.getLocation() != null) {
                     try {
-                        geoFire.setLocation(device.getDeviceid(),
+                        // no need to check valid key here because it will be
+                        // captured in Exception ex below.
+                        geoFire.setLocation(device.getDeviceid().trim(),
                                 new GeoLocation(device.getLocation().getLatitude(),
                                         device.getLocation().getLongitude()),
                                 new GeoFire.CompletionListener() {
@@ -348,7 +351,10 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                 }
                 fbDevice.setStatus(deviceStatus);
                 
-                fbDevices.put(fbDevice.getDeviceID(), fbDevice);
+                String deviceID = fbDevice.getDeviceID().trim();
+                if (FirebaseUtil.isValidKey(deviceID)) {
+                    fbDevices.put(deviceID, fbDevice);
+                }
 
             }
 
@@ -408,16 +414,22 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         return fbTickets;
     }
     
-    private void setEngineerIdInAtmFirebase(DatabaseReference ref, String machineNumber, String key, String assigned) {
-        ref.child(machineNumber).child(key).setValue(assigned, 
-                new DatabaseReference.CompletionListener() {
-            @Override
-            public void onComplete(DatabaseError de, DatabaseReference dr) {
-                if (de != null) {
-                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
-            }
-            }
-        });
+    private void setEngineerIdInAtmFirebase(DatabaseReference ref, String keyID, String key, String assigned) {
+        if (FirebaseUtil.isValidKey(keyID) && FirebaseUtil.isValidKey(key)) {
+            ref.child(keyID).child(key).setValue(assigned, 
+                    new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(DatabaseError de, DatabaseReference dr) {
+                    if (de != null) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+                }
+                }
+            });
+        } else {
+            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+                    "Invalid Key {0} or {1} is found. Please only use alphanumeric characters", 
+                    new Object[]{keyID, key});
+        }
     }
 
     @Override
@@ -441,17 +453,42 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         // so, move these here outside onComplete because they will be overriden in onChild listener callbacks!
         for (TransferTicketDto ticket : tickets) {
             RestTicketDto rest = RestTicketDto.convert(ticket.getTicketMap());
-            setEngineerIdInAtmFirebase(atmDb, rest.getMachineNumber(), "engineer_id", rest.getAssignee());
-            setEngineerIdInAtmFirebase(atmDb, rest.getMachineNumber(), "engineerID", rest.getAssignee());
+//            List<SlmUserVo> usersVo;
+            String loginName = rest.getAssignee();
+//            try {
+//                usersVo = this.pvimSlmUserRepository.query(new GetPvimUserByLoginNameSpecification(loginName));
+//            } catch (PvExtPersistenceException ex) {
+//                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+//                continue;
+//            }
             
-            Map<String, Boolean> fbTicketPerAtm;
-            if (fbListAtmTicketsMap.containsKey(rest.getMachineNumber())) {
-                fbTicketPerAtm = (Map<String, Boolean>) fbListAtmTicketsMap.get(rest.getMachineNumber());
+//            if (usersVo == null || usersVo.isEmpty() || usersVo.size() > 1) {
+//                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE,
+//                        "There are more than one user with login name or no login name available: [{0}] Ignoring update ticket", loginName);
+//                continue;
+//            }
+            
+            String atmKey = rest.getMachineNumber().trim();
+            setEngineerIdInAtmFirebase(atmDb, atmKey, "engineer_id", loginName);
+            setEngineerIdInAtmFirebase(atmDb, atmKey, "engineerID", loginName);
+            
+            Map<String, Long> fbTicketPerAtm;
+//            SlmUserVo userVo = usersVo.get(0);
+//            String userID = userVo.getUserID();
+            String userID = loginName;
+            if (fbListAtmTicketsMap.containsKey(userID)) {
+                fbTicketPerAtm = (Map<String, Long>) fbListAtmTicketsMap.get(userID);
             } else {
                 fbTicketPerAtm = new HashMap<>();
-                fbListAtmTicketsMap.put(rest.getMachineNumber(), fbTicketPerAtm);
+                if (FirebaseUtil.isValidKey(userID)) {
+                    fbListAtmTicketsMap.put(userID, fbTicketPerAtm);
+                } else {
+                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+                            "Invalid login name {0} is found. Please only use alphanumeric characters", 
+                            new Object[]{userID});
+                }
             }
-            fbTicketPerAtm.put(ticket.getTicketId(), Boolean.TRUE);
+            fbTicketPerAtm.put(ticket.getTicketId(), System.currentTimeMillis());
             
             PvimTicketVo pvimTicket = new PvimTicketVo();
 
@@ -487,7 +524,15 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                 fbUser.setMobile(userVo.getMobile());
                 fbUser.setUserId(userVo.getUserID());
                 fbUser.setUserType(userVo.getUserType());
-                fbUsers.put(fbUser.getUserId(), fbUser); // don't use login name
+                String usLoginName = fbUser.getLoginName();
+                if (FirebaseUtil.isValidKey(usLoginName)) {
+                    fbUsers.put(fbUser.getLoginName(), fbUser); // Deal, that login name will be used.
+                } else {
+                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+                            "unable to send user: {0} because it contains illegal characters! Please only use alphanumeric!", 
+                            usLoginName);
+                }
+//                fbUsers.put(fbUser.getUserId(), fbUser); // don't use login name
                                                          // because login name can have dot (.) character
                                                          // which is forbidden by firebase.
                                                          // userid is autogenerated and guaranteed alphanumeric ONLY
