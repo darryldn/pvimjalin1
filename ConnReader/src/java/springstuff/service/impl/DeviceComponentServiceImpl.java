@@ -158,13 +158,17 @@ public class DeviceComponentServiceImpl implements DeviceComponentService {
             
             for (Map.Entry<String, List<ComponentStateVo>> e : allDevices.entrySet()) {
                 DeviceComponentStateJson device = new DeviceComponentStateJson();
-                device.setDeviceid(e.getKey());
+                if (e.getKey() != null) {
+                    device.setDeviceid(e.getKey().trim());
+                }
                 device.setComponents(new ArrayList<>());
                 
                 List<ComponentStateVo> ev = e.getValue();
                 if (ev != null && !ev.isEmpty()) {
                     for (ComponentStateVo c : e.getValue()) {
-                        device.getComponents().add(new ComponentStateJson(c.getComponent(), c.getComponentState()));
+                        if (c.getComponent() != null) {
+                            device.getComponents().add(new ComponentStateJson(c.getComponent().trim(), c.getComponentState()));
+                        }
                     }
                     String sLat = ev.get(0).getLatitude();
                     String sLon = ev.get(0).getLongitude();
@@ -178,7 +182,9 @@ public class DeviceComponentServiceImpl implements DeviceComponentService {
                             
                         }
                     }
-                    device.setDeviceType(ev.get(0).getDeviceDescr());
+                    if (ev.get(0).getDeviceDescr() != null) {
+                        device.setDeviceType(ev.get(0).getDeviceDescr().trim());
+                    }
                 }
                 
                 devices.add(device);

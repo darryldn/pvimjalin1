@@ -7,6 +7,7 @@ package springstuff.service.impl;
 
 import com.google.gson.Gson;
 import id.dni.pvim.ext.dto.PvWsCassette;
+import id.dni.pvim.ext.dto.PvWsCassetteResponse;
 import id.dni.pvim.ext.dto.PvWsDefaultRequest;
 import id.dni.pvim.ext.dto.PvWsDefaultResponse;
 import id.dni.pvim.ext.web.in.Commons;
@@ -81,7 +82,7 @@ public class PvWebServiceImpl implements IPvWebService {
         
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Obtained response: " + jsonResponse);
         
-        PvWsDefaultResponse ccResponse = gson.fromJson(jsonResponse, PvWsDefaultResponse.class);
+        PvWsCassetteResponse ccResponse = gson.fromJson(jsonResponse, PvWsCassetteResponse.class);
         if (ccResponse.getErr() != null) {
             throw new RemoteWsException(new CassetteBalanceServiceException(ccResponse.getErr()));
         }

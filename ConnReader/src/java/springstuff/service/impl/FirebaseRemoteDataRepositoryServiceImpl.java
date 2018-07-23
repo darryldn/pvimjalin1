@@ -338,15 +338,19 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
             for (DeviceComponentStateJson device : devices) {
                 FbDeviceJson fbDevice = new FbDeviceJson();
 
-                fbDevice.setDeviceID(device.getDeviceid());
-                fbDevice.setType(device.getDeviceType());
+                if (device.getDeviceid() != null) {
+                    fbDevice.setDeviceID(device.getDeviceid().trim());
+                }
+                if (device.getDeviceType() != null) {
+                    fbDevice.setType(device.getDeviceType().trim());
+                }
                 fbDevice.setTimestamp(System.currentTimeMillis());
 
                 Map<String, Object> deviceStatus = new HashMap<>();
                 List<ComponentStateJson> deviceComponents = device.getComponents();
                 for (ComponentStateJson component : deviceComponents) {
                     if (component.getComponent() != null) {
-                        deviceStatus.put(component.getComponent(), component.getState());
+                        deviceStatus.put(component.getComponent().trim(), component.getState()); // remove trailing spaces
                     }
                 }
                 fbDevice.setStatus(deviceStatus);
