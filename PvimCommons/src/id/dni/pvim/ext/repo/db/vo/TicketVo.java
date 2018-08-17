@@ -18,8 +18,9 @@ public class TicketVo extends GenericVo {
 
     public static final String TABLE_NAME = "TICKET",
             FIELD_TICKETID = "ticket_id",
-            FIELD_TICKETNUMBER = "ticket_number",
-            FIELD_LASTUPDATED = "last_updated";
+            FIELD_TICKETNUMBER = "ticket_num",
+            FIELD_LASTUPDATED = "last_updated",
+            FIELD_ASSIGNEEID = "ASSIGNEE_ID";
     
     private final Map<String, FieldData> tbl;
     public TicketVo () {
@@ -27,6 +28,7 @@ public class TicketVo extends GenericVo {
         tbl.put(FIELD_TICKETID, new FieldData.Builder().setFieldName(FIELD_TICKETID).setPartOfPk(true).build());
         tbl.put(FIELD_TICKETNUMBER, new FieldData.Builder().setFieldName(FIELD_TICKETNUMBER).build());
         tbl.put(FIELD_LASTUPDATED, new FieldData.Builder().setFieldName(FIELD_LASTUPDATED).build());
+        tbl.put(FIELD_ASSIGNEEID, new FieldData.Builder().setFieldName(FIELD_ASSIGNEEID).build());
     }
     
     
@@ -46,6 +48,10 @@ public class TicketVo extends GenericVo {
     
     public String getTicketNumber() {
         return (String) tbl.get(FIELD_TICKETNUMBER).getValue();
+    }
+    
+    public String getAssigneeID() {
+        return (String) tbl.get(FIELD_ASSIGNEEID).getValue();
     }
     
     public long getLastUpdated() {

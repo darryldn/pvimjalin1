@@ -12,7 +12,7 @@ import id.dni.pvim.ext.repo.db.vo.TicketVo;
  *
  * @author darryl.sulistyan
  */
-public class GetTicketByNumberSpecification implements ISqlSpecification {
+public class GetTicketByAssigneeIdSpecification implements ISqlSpecification {
 
     private static final String SQL = 
             new StringBuilder()
@@ -24,12 +24,12 @@ public class GetTicketByNumberSpecification implements ISqlSpecification {
             .append(" from ")
                     .append(TicketVo.TABLE_NAME).append(" ")
             .append(" where ")
-                    .append(TicketVo.FIELD_TICKETNUMBER).append("=?")
+                    .append(TicketVo.FIELD_ASSIGNEEID).append("=?")
             .toString();
     
-    private final String ticketNumber;
-    public GetTicketByNumberSpecification(String ticketNumber) {
-        this.ticketNumber = ticketNumber;
+    private final String assigneeId;
+    public GetTicketByAssigneeIdSpecification(String assigneeId) {
+        this.assigneeId = assigneeId;
     }
     
     @Override
@@ -39,7 +39,7 @@ public class GetTicketByNumberSpecification implements ISqlSpecification {
 
     @Override
     public Object[] getSqlParams() {
-        return new Object[]{ticketNumber};
+        return new Object[]{assigneeId};
     }
     
 }

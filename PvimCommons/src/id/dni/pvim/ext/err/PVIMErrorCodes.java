@@ -17,7 +17,8 @@ public final class PVIMErrorCodes {
             E_NET = -98002,
             E_INPUT_NO_NOTES = -98003,
             E_DATABASE_ERROR = -98004,
-            E_UNKNOWN_ERROR = -98005;
+            E_UNKNOWN_ERROR = -98005,
+            E_INPUT_ERROR = -98006;
     
     private PVIMErrorCodes() {
         

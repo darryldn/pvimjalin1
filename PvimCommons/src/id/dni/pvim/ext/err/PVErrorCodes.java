@@ -18,7 +18,8 @@ public class PVErrorCodes {
             E_INPUT_NO_NOTES = -99003,
             E_INTERNAL_SERVER_ERROR = -99004,
             E_DATABASE_ERROR = -99005,
-            E_UNKNOWN_ERROR = -99006;
+            E_UNKNOWN_ERROR = -99006,
+            E_INPUT_ERROR = -99007;
     
     private PVErrorCodes() {
         

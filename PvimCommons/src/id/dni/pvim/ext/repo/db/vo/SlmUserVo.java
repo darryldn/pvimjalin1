@@ -20,7 +20,8 @@ public class SlmUserVo extends GenericVo {
             FIELD_MOBILE = "MOBILE",
             FIELD_EMAIL = "EMAIL",
             FIELD_USER_TYPE = "USER_TYPE",
-            FIELD_LOGIN_NAME = "LOGIN_NAME";
+            FIELD_LOGIN_NAME = "LOGIN_NAME",
+            FIELD_LOCKED = "LOCKED";
             
     
     private final Map<String, FieldData> tbl;
@@ -31,6 +32,7 @@ public class SlmUserVo extends GenericVo {
         tbl.put(FIELD_EMAIL, new FieldData.Builder().setFieldName(FIELD_EMAIL).build());
         tbl.put(FIELD_USER_TYPE, new FieldData.Builder().setFieldName(FIELD_USER_TYPE).build());
         tbl.put(FIELD_LOGIN_NAME, new FieldData.Builder().setFieldName(FIELD_LOGIN_NAME).build());
+        tbl.put(FIELD_LOCKED, new FieldData.Builder().setFieldName(FIELD_LOCKED).build());
     }
     
     @Override
@@ -61,6 +63,10 @@ public class SlmUserVo extends GenericVo {
     
     public String getLoginName() {
         return (String) tbl.get(FIELD_LOGIN_NAME).getValue();
+    }
+    
+    public String getLocked() {
+        return (String) tbl.get(FIELD_LOCKED).getValue();
     }
     
 //    public void setMobile(String mobile) {
