@@ -39,6 +39,8 @@ import javax.xml.ws.handler.Handler;
 import id.dni.pvim.ext.repo.boot.ITicketNotesRepository;
 import id.dni.pvim.ext.repo.db.ISlmUserRepository;
 import id.dni.pvim.ext.repo.db.ITicketRepository;
+import id.dni.pvim.ext.repo.db.spec.impl.GetAllPvimUsersSpecification;
+import id.dni.pvim.ext.repo.db.spec.impl.GetAllTicketsSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByEmailSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByLoginNameSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetTicketByAssigneeIdSpecification;
@@ -121,6 +123,22 @@ public class TicketOperation {
         return updateTicketWithStateAndNoteMandatory(request, PVIMTicketState.FIXED);
     }
     
+    private List<RestTicketDto> getTicketsFromWs(PVIMAuthToken auth, List<TicketVo> tickets) {
+        List<RestTicketDto> restTickets = new ArrayList<>();
+        for (TicketVo ticket : tickets) {
+            Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
+                    " - Tickets with specified assignee: {0}", new Object[]{ticket.getTicketNumber()});
+            PVIMGetTicketByNumberRequest req = new PVIMGetTicketByNumberRequest();
+            req.setAuth(auth);
+            req.setTicketNumber(ticket.getTicketNumber());
+            PVIMGetTicketByNumberResponse ticketResp = findTicket(req);
+            if (ticketResp.getTicket() != null) {
+                restTickets.add(ticketResp.getTicket());
+            }
+        }
+        return restTickets;
+    }
+    
     public PVIMUpdateTicketResponse updateTicket(PVIMUpdateTicketRequest request) {
         
         PVIMAuthToken auth = request.getAuth();
@@ -153,6 +171,7 @@ public class TicketOperation {
         PVIMGetTicketsByAssigneeResponse resp = new PVIMGetTicketsByAssigneeResponse();
         
         String assigneeId = null;
+        boolean getAllTickets = false;
         
         IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
         boolean isRollback = false;
@@ -162,6 +181,8 @@ public class TicketOperation {
             Object conn = pvimTx.getTrxConnection();
             
             if (assignee != null) {
+                
+                getAllTickets = assignee.isIsAll();
                 
                 if (Commons.isEmptyStrIgnoreSpaces(assignee.getUserID())) {
                     // obtain the assignee id via loginname or email
@@ -197,32 +218,26 @@ public class TicketOperation {
                 }
             }
             
+            ITicketRepository ticketRepo = RepositoryFactory.getInstance().getTicketRepository(conn);
+            
             if (!Commons.isEmptyStrIgnoreSpaces(assigneeId)) {
                 Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
                             " - find assignee with assigneeId: {0}", new Object[]{assigneeId});
-                ITicketRepository ticketRepo = RepositoryFactory.getInstance().getTicketRepository(conn);
                 List<TicketVo> tickets = ticketRepo.query(new GetTicketByAssigneeIdSpecification(assigneeId));
-                List<RestTicketDto> restTickets = new ArrayList<>();
-                for (TicketVo ticket : tickets) {
-                    Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
-                            " - Tickets with specified assignee: {0}", new Object[]{ticket.getTicketNumber()});
-                    PVIMGetTicketByNumberRequest req = new PVIMGetTicketByNumberRequest();
-                    req.setAuth(auth);
-                    req.setTicketNumber(ticket.getTicketNumber());
-                    PVIMGetTicketByNumberResponse ticketResp = findTicket(req);
-                    if (ticketResp.getTicket() != null) {
-                        restTickets.add(ticketResp.getTicket());
-                    }
-                }
-                resp.setTickets(restTickets);
+                resp.setTickets(getTicketsFromWs(auth, tickets));
 
+            } else if (getAllTickets) {
+                Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
+                        " - find all tickets");
+                List<TicketVo> tickets = ticketRepo.query(new GetAllTicketsSpecification());
+                resp.setTickets(getTicketsFromWs(auth, tickets));
+                
             } else {
                 // no assignee id found, report error here
                 OperationError err = new OperationError();
                 err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
                 err.setErrMsg("No Assignee found");
                 resp.setErr(err);
-
             }
             
             isRollback = false;

@@ -7,11 +7,13 @@ package id.dni.pvim.ext.repo.boot;
 
 import id.dni.pvim.ext.repo.db.IDBMachineBasedataRepository;
 import id.dni.pvim.ext.db.config.PVIMDBConnectionFactory;
+import id.dni.pvim.ext.repo.db.ISlmLocationRepository;
 import id.dni.pvim.ext.repo.db.ISlmUserRepository;
 import id.dni.pvim.ext.repo.db.ITicketRepository;
 import id.dni.pvim.ext.repo.db.TicketDBRepositoryImpl;
 import id.dni.pvim.ext.repo.impl.DBMachineBasedataRepository;
 import id.dni.pvim.ext.repo.db.TicketNotesDBRepositoryImpl;
+import id.dni.pvim.ext.repo.impl.SlmLocationRepositoryImpl;
 import id.dni.pvim.ext.repo.impl.SlmUserRepository;
 import java.sql.Connection;
 
@@ -37,6 +39,10 @@ public class RepositoryFactory {
     
     public ITicketRepository getTicketRepository(Object trxObject) {
         return new TicketDBRepositoryImpl((Connection) trxObject);
+    }
+    
+    public ISlmLocationRepository getSlmLocationRepository(Object trxObject) {
+        return new SlmLocationRepositoryImpl((Connection) trxObject);
     }
     
     public ITicketNotesRepository getTicketNotesRepository() {

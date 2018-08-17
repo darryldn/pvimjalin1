@@ -11,6 +11,8 @@ import id.dni.pvim.ext.web.in.Util;
 import id.dni.pvim.ext.web.rest.LocationOperation;
 import id.dni.pvim.ext.web.rest.PVGetDeviceIDRequest;
 import id.dni.pvim.ext.web.rest.PVGetDeviceIDResponse;
+import id.dni.pvim.ext.web.rest.PVIMEngineerLocationRequest;
+import id.dni.pvim.ext.web.rest.PVIMEngineerLocationResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -71,6 +73,18 @@ public class LocationServlet extends HttpServlet {
             LocationOperation oper = new LocationOperation();
             
             switch (requestOperation) {
+                case "updateEngineerLocation": {
+                    PVIMEngineerLocationRequest req = GSON.fromJson(input, PVIMEngineerLocationRequest.class);
+                    PVIMEngineerLocationResponse resp = oper.updateEngineerLocation(req);
+                    Util.sendAsJson(response, resp);
+                    
+                } break;
+                case "getEngineerLocation": {
+                    PVIMEngineerLocationRequest req = GSON.fromJson(input, PVIMEngineerLocationRequest.class);
+                    PVIMEngineerLocationResponse resp = oper.getEngineerLocation(req);
+                    Util.sendAsJson(response, resp);
+                    
+                } break;
                 case "getDeviceIDLocation": {
                     PVGetDeviceIDRequest req = GSON.fromJson(input, PVGetDeviceIDRequest.class);
                     PVGetDeviceIDResponse resp = oper.getDeviceIDLocation(req);

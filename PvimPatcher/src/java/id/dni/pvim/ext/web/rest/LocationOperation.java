@@ -5,15 +5,23 @@
  */
 package id.dni.pvim.ext.web.rest;
 
+import id.dni.pvim.ext.db.config.PVIMDBConnectionFactory;
+import id.dni.pvim.ext.db.trx.IProViewTrx;
 import id.dni.pvim.ext.db.vo.DBMachineGpsVo;
 import id.dni.pvim.ext.repo.boot.RepositoryFactory;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.repo.db.vo.DBMachineBasedataVo;
 import id.dni.pvim.ext.err.PVErrorCodes;
+import id.dni.pvim.ext.err.PVIMErrorCodes;
 import id.dni.pvim.ext.repo.db.IDBMachineBasedataRepository;
+import id.dni.pvim.ext.repo.db.ISlmLocationRepository;
 import id.dni.pvim.ext.repo.db.spec.impl.DeviceGpsBasedataSpecification;
+import id.dni.pvim.ext.repo.db.spec.impl.GetPvimEngineerLocationByIdSpecification;
+import id.dni.pvim.ext.repo.db.vo.SlmLocationVo;
 import id.dni.pvim.ext.web.in.OperationError;
 import id.dni.pvim.ext.web.in.PVAuthToken;
+import id.dni.pvim.ext.web.in.PVIMAuthToken;
+import id.dni.pvim.ext.web.in.PVIMLocation;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Level;
@@ -74,6 +82,140 @@ public class LocationOperation {
         gps.setStatus("OK");
         return gps;
         
+    }
+    
+    public PVIMEngineerLocationResponse updateEngineerLocation(PVIMEngineerLocationRequest request) {
+        PVIMAuthToken auth = request.getAuth(); // not used
+        PVIMLocation reqLoc = request.getLoc();
+        
+        PVIMEngineerLocationResponse response = new PVIMEngineerLocationResponse();
+        if (reqLoc == null) {
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("No Input given");
+            response.setErr(err);
+            return response;
+        }
+        
+        IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
+        boolean isRollback = false;
+        boolean isSuccess = false;
+        try {
+            pvimTx.begin();
+            Object trxObject = pvimTx.getTrxConnection();
+            ISlmLocationRepository slmLocationRepos = RepositoryFactory.getInstance().getSlmLocationRepository(trxObject);
+            SlmLocationVo newLoc = new SlmLocationVo();
+            newLoc.setEngineerID(reqLoc.getId());
+            newLoc.setLatitude(reqLoc.getLatitude());
+            newLoc.setLongitude(reqLoc.getLongitude());
+            newLoc.setNotes(reqLoc.getNotes());
+            newLoc.setLastUpdated(System.currentTimeMillis());
+            
+            isSuccess = slmLocationRepos.update(newLoc);
+            if (!isSuccess) {
+                isSuccess = slmLocationRepos.insert(newLoc);
+            }
+            
+            if (isSuccess) {
+                response.setLoc(reqLoc);
+            } else {
+                OperationError err = new OperationError();
+                err.setErrCode("" + PVIMErrorCodes.E_DATABASE_ERROR);
+                err.setErrMsg("Failed update location data");
+                response.setErr(err);
+            }
+            
+        } catch (PvExtPersistenceException ex) {
+            Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+            isRollback = true;
+            OperationError err = new OperationError();
+            err.setErrCode(PVIMErrorCodes.E_DATABASE_ERROR + "");
+            err.setErrMsg("Unable to get location data");
+            response.setErr(err);
+            
+        } finally {
+            try {
+                if (isRollback) {
+                    pvimTx.rollback();
+                } else {
+                    pvimTx.commit();
+                }
+                pvimTx.close();
+            } catch (PvExtPersistenceException ex) {
+                Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
+        
+        return response;
+    }
+    
+    public PVIMEngineerLocationResponse getEngineerLocation(PVIMEngineerLocationRequest request) {
+        PVIMAuthToken auth = request.getAuth(); // not used
+        PVIMLocation reqLoc = request.getLoc();
+        
+        PVIMEngineerLocationResponse response = new PVIMEngineerLocationResponse();
+        if (reqLoc == null) {
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("No Input given");
+            response.setErr(err);
+            return response;
+        }
+        
+        IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
+        boolean isRollback = false;
+        try {
+            pvimTx.begin();
+            Object trxObject = pvimTx.getTrxConnection();
+            ISlmLocationRepository slmLocationRepos = RepositoryFactory.getInstance().getSlmLocationRepository(trxObject);
+            List<SlmLocationVo> loclist = slmLocationRepos.query(new GetPvimEngineerLocationByIdSpecification(reqLoc.getId()));
+            
+            for (SlmLocationVo loc : loclist) {
+                PVIMLocation ploc = new PVIMLocation();
+                ploc.setId(loc.getEngineerID());
+                if (loc.getLatitude() != null) {
+                    ploc.setLatitude(loc.getLatitude().doubleValue());
+                }
+                if (loc.getLongitude() != null) {
+                    ploc.setLongitude(loc.getLongitude().doubleValue());
+                }
+                ploc.setNotes(loc.getNotes());
+                response.setLoc(ploc);
+                
+                break;
+            }
+            
+            if (response.getLoc() == null) {
+                OperationError err = new OperationError();
+                err.setErrCode(PVIMErrorCodes.E_INPUT_ERROR + "");
+                err.setErrMsg("No Engineer found");
+                response.setErr(err);
+            }
+            
+        } catch (PvExtPersistenceException ex) {
+            Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+            isRollback = true;
+            OperationError err = new OperationError();
+            err.setErrCode(PVIMErrorCodes.E_DATABASE_ERROR + "");
+            err.setErrMsg("Unable to get location data");
+            response.setErr(err);
+            
+        } finally {
+            try {
+                if (isRollback) {
+                    pvimTx.rollback();
+                } else {
+                    pvimTx.commit();
+                }
+                pvimTx.close();
+            } catch (PvExtPersistenceException ex) {
+                Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
+        
+        return response;
     }
     
     public PVGetDeviceIDResponse getDeviceIDLocation(PVGetDeviceIDRequest request) {
