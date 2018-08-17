@@ -14,6 +14,15 @@ public class PVIMTicketAssignee {
     private String email;
     private String loginname;
     private String userID;
+    private boolean isAll;
+
+    public boolean isIsAll() {
+        return isAll;
+    }
+
+    public void setIsAll(boolean isAll) {
+        this.isAll = isAll;
+    }
 
     public String getEmail() {
         return email;
