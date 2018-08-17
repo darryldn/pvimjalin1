@@ -7,6 +7,10 @@ package springstuff.service.impl;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import id.dni.ext.prop.FirebaseUtil;
@@ -33,6 +37,7 @@ import id.dni.ext.web.ws.obj.firebase.FbPvimSlmUserJson;
 import id.dni.pvim.ext.repo.db.ISlmUserRepository;
 import id.dni.pvim.ext.repo.db.spec.impl.GetAllPvimUsersSpecification;
 import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
+import id.dni.pvim.ext.web.in.Commons;
 import springstuff.model.PvimTicketVo;
 import springstuff.service.RemoteDataRepositoryService;
 import springstuff.service.firebase.FirebaseDatabaseReferenceService;
@@ -190,47 +195,48 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         }
     }
 
+    // ticket in firebase is planned to be removed. So, this is commented out
     @Override
-    @Scheduled(fixedRateString = "${TicketService.firebase.update.timestamp.interval}")
+    //@Scheduled(fixedRateString = "${TicketService.firebase.update.timestamp.interval}")
     public void periodicUpdateLastupdate() {
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO, ">> periodicUpdateLastupdate()");
-        try {
-            List<PvimTicketVo> tickets = pvimTicketMonitorRepository.getAllTickets();
-
-            if (!tickets.isEmpty()) {
-                final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.ticketsFirebaseDBPath);
-                for (PvimTicketVo ticket : tickets) {
-                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - reading ticket: {0}", ticket);
-                    if (ticket.isSuccessfullyUpdated()) {
-                        final long lastupdated = System.currentTimeMillis();
-                    ticket.setLastupdated(System.currentTimeMillis());
-//                    ticketsDb.child(ticket.getTicketNumber()).child("lastupdated").setValue(ticket.getLastupdated(), 
-                        db.child(ticket.getTicketId()).child("lastupdated").setValue(lastupdated,
-                                new DatabaseReference.CompletionListener() {
-                            @Override
-                            public void onComplete(DatabaseError de, DatabaseReference dr) {
-                                if (de == null) {
-                                    try {
-                                        pvimTicketMonitorRepository.updateTicket(ticket);
-                                    } catch (PvExtPersistenceException ex) {
-                                        Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
-                                    }
-                                } else {
-                                    Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
-                                }
-                            }
-                        });
-                    }
-                }
-            } else {
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - ticket is empty!");
-            }
-
-        } catch (PvExtPersistenceException ex) {
-            Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "<< periodicUpdateLastupdate()");
-        }
+//        Logger.getLogger(this.getClass().getName()).log(Level.INFO, ">> periodicUpdateLastupdate()");
+//        try {
+//            List<PvimTicketVo> tickets = pvimTicketMonitorRepository.getAllTickets();
+//
+//            if (!tickets.isEmpty()) {
+//                final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.ticketsFirebaseDBPath);
+//                for (PvimTicketVo ticket : tickets) {
+//                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - reading ticket: {0}", ticket);
+//                    if (ticket.isSuccessfullyUpdated()) {
+//                        final long lastupdated = System.currentTimeMillis();
+//                    ticket.setLastupdated(System.currentTimeMillis());
+////                    ticketsDb.child(ticket.getTicketNumber()).child("lastupdated").setValue(ticket.getLastupdated(), 
+//                        db.child(ticket.getTicketId()).child("lastupdated").setValue(lastupdated,
+//                                new DatabaseReference.CompletionListener() {
+//                            @Override
+//                            public void onComplete(DatabaseError de, DatabaseReference dr) {
+//                                if (de == null) {
+//                                    try {
+//                                        pvimTicketMonitorRepository.updateTicket(ticket);
+//                                    } catch (PvExtPersistenceException ex) {
+//                                        Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+//                                    }
+//                                } else {
+//                                    Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+//                                }
+//                            }
+//                        });
+//                    }
+//                }
+//            } else {
+//                Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - ticket is empty!");
+//            }
+//
+//        } catch (PvExtPersistenceException ex) {
+//            Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+//        } finally {
+//            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "<< periodicUpdateLastupdate()");
+//        }
 
     }
 
@@ -331,72 +337,72 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
 
         }
 
-        if (this.machineStatusFirebaseDBPath != null && !"".equals(this.machineStatusFirebaseDBPath.trim())) {
-            final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.machineStatusFirebaseDBPath);
-            final Map<String, Object> fbDevices = new HashMap<>();
-
-            for (DeviceComponentStateJson device : devices) {
-                FbDeviceJson fbDevice = new FbDeviceJson();
-
-                if (device.getDeviceid() != null) {
-                    fbDevice.setDeviceID(device.getDeviceid().trim());
-                }
-                if (device.getDeviceType() != null) {
-                    fbDevice.setType(device.getDeviceType().trim());
-                }
-                fbDevice.setTimestamp(System.currentTimeMillis());
-
-                Map<String, Object> deviceStatus = new HashMap<>();
-                List<ComponentStateJson> deviceComponents = device.getComponents();
-                for (ComponentStateJson component : deviceComponents) {
-                    if (component.getComponent() != null) {
-                        deviceStatus.put(component.getComponent().trim(), component.getState()); // remove trailing spaces
-                    }
-                }
-                fbDevice.setStatus(deviceStatus);
-                
-                String deviceID = fbDevice.getDeviceID().trim();
-                if (FirebaseUtil.isValidKey(deviceID)) {
-                    fbDevices.put(deviceID, fbDevice);
-                }
-
-            }
-
-//            final int maxWaitQuery = this.maxWaitTimeForQueryCompletion;
-//            this.asyncService.run(new Runnable() {
-//                
-//                private final Object lock = new Object();
-//                
-//                @Override
-//                public void run() {
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - devices: {0}", fbDevices);
-//                    
-
-            db.updateChildren(fbDevices, new DumbFirebaseCompletionListener("Successfully update ATM information!"));
-
-//            ticketsDb.updateChildren(fbDevices, new DatabaseReference.CompletionListener() {
-//                @Override
-//                public void onComplete(DatabaseError de, DatabaseReference dr) {
-//                    if (de != null) {
-//                        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
-//                    } else {
-//                        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Successfully update ATM information!");
-//                    }
-////                            synchronized(lock) {
-////                                lock.notifyAll();
-////                            }
+//        if (this.machineStatusFirebaseDBPath != null && !"".equals(this.machineStatusFirebaseDBPath.trim())) {
+//            final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.machineStatusFirebaseDBPath);
+//            final Map<String, Object> fbDevices = new HashMap<>();
+//
+//            for (DeviceComponentStateJson device : devices) {
+//                FbDeviceJson fbDevice = new FbDeviceJson();
+//
+//                if (device.getDeviceid() != null) {
+//                    fbDevice.setDeviceID(device.getDeviceid().trim());
 //                }
-//            });
-//                    synchronized(lock) {
-//                        try {
-//                            lock.wait(maxWaitQuery);
-//                        } catch (InterruptedException ex) {
-//                        }
+//                if (device.getDeviceType() != null) {
+//                    fbDevice.setType(device.getDeviceType().trim());
+//                }
+//                fbDevice.setTimestamp(System.currentTimeMillis());
+//
+//                Map<String, Object> deviceStatus = new HashMap<>();
+//                List<ComponentStateJson> deviceComponents = device.getComponents();
+//                for (ComponentStateJson component : deviceComponents) {
+//                    if (component.getComponent() != null) {
+//                        deviceStatus.put(component.getComponent().trim(), component.getState()); // remove trailing spaces
 //                    }
 //                }
+//                fbDevice.setStatus(deviceStatus);
 //                
-//            });
-        }
+//                String deviceID = fbDevice.getDeviceID().trim();
+//                if (FirebaseUtil.isValidKey(deviceID)) {
+//                    fbDevices.put(deviceID, fbDevice);
+//                }
+//
+//            }
+//
+////            final int maxWaitQuery = this.maxWaitTimeForQueryCompletion;
+////            this.asyncService.run(new Runnable() {
+////                
+////                private final Object lock = new Object();
+////                
+////                @Override
+////                public void run() {
+//            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - devices: {0}", fbDevices);
+////                    
+//
+//            db.updateChildren(fbDevices, new DumbFirebaseCompletionListener("Successfully update ATM information!"));
+//
+////            ticketsDb.updateChildren(fbDevices, new DatabaseReference.CompletionListener() {
+////                @Override
+////                public void onComplete(DatabaseError de, DatabaseReference dr) {
+////                    if (de != null) {
+////                        Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+////                    } else {
+////                        Logger.getLogger(this.getClass().getName()).log(Level.INFO, "Successfully update ATM information!");
+////                    }
+//////                            synchronized(lock) {
+//////                                lock.notifyAll();
+//////                            }
+////                }
+////            });
+////                    synchronized(lock) {
+////                        try {
+////                            lock.wait(maxWaitQuery);
+////                        } catch (InterruptedException ex) {
+////                        }
+////                    }
+////                }
+////                
+////            });
+//        }
 
     }
 
@@ -442,8 +448,8 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
             return;
         }
         
-        final DatabaseReference ticketsDb = this.firebaseDB.getDatabaseReference(this.ticketsFirebaseDBPath);
-        final DatabaseReference atmDb = this.firebaseDB.getDatabaseReference(this.machineStatusFirebaseDBPath);
+        //final DatabaseReference ticketsDb = this.firebaseDB.getDatabaseReference(this.ticketsFirebaseDBPath);
+        //final DatabaseReference atmDb = this.firebaseDB.getDatabaseReference(this.machineStatusFirebaseDBPath);
         final DatabaseReference ticketNotifDb = this.firebaseDB.getDatabaseReference(this.ticketsNotifFirebaseDBPath);
         
         final Map<String, Object> fbTickets = constructFbTickets(tickets);
@@ -473,8 +479,8 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
 //            }
             
             String atmKey = rest.getMachineNumber().trim();
-            setEngineerIdInAtmFirebase(atmDb, atmKey, "engineer_id", loginName);
-            setEngineerIdInAtmFirebase(atmDb, atmKey, "engineerID", loginName);
+//            setEngineerIdInAtmFirebase(atmDb, atmKey, "engineer_id", loginName);
+//            setEngineerIdInAtmFirebase(atmDb, atmKey, "engineerID", loginName);
             
             Map<String, Long> fbTicketPerAtm;
 //            SlmUserVo userVo = usersVo.get(0);
@@ -508,7 +514,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
             }
         }
         
-        ticketsDb.updateChildren(fbTickets, new DumbFirebaseCompletionListener());
+//        ticketsDb.updateChildren(fbTickets, new DumbFirebaseCompletionListener());
         ticketNotifDb.updateChildren(fbListAtmTicketsMap, new DumbFirebaseCompletionListener());
 
     }
@@ -519,6 +525,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, ">> periodicSendPvimSlmUserData()");
         try {
             final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.pvimSlmUserFirebaseDBPath);
+            final FirebaseAuth auth = FirebaseAuth.getInstance(FirebaseApp.getInstance());
             List<SlmUserVo> usersVo = this.pvimSlmUserRepository.query(new GetAllPvimUsersSpecification());
             Map<String, Object> fbUsers = new HashMap<>();
             for (SlmUserVo userVo : usersVo) {
@@ -528,7 +535,26 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                 fbUser.setMobile(userVo.getMobile());
                 fbUser.setUserId(userVo.getUserID());
                 fbUser.setUserType(userVo.getUserType());
+                fbUser.setLocked(userVo.getLocked());
                 String usLoginName = fbUser.getLoginName();
+                
+                if (!Commons.isEmptyStrIgnoreSpaces(userVo.getEmail())) {
+                    UserRecord.CreateRequest cr = new UserRecord.CreateRequest();
+                    cr.setEmail(userVo.getEmail());
+                    cr.setPassword("myjalinadmin");
+                    try {
+                        auth.createUser(cr);
+                    } catch (FirebaseAuthException ex) {
+                        // error is logged when user exists, too much log!
+//                        Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } else {
+                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+                            "unable to send user: {0} because its email is not valid / empty!", 
+                            usLoginName);
+                }
+                
+                
                 if (FirebaseUtil.isValidKey(usLoginName)) {
                     fbUsers.put(fbUser.getLoginName(), fbUser); // Deal, that login name will be used.
                 } else {
@@ -542,7 +568,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                                                          // userid is autogenerated and guaranteed alphanumeric ONLY
             }
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - reading users from db: {0}", fbUsers);
-            db.updateChildren(fbUsers, new DatabaseReference.CompletionListener() {
+            /*db.updateChildren(fbUsers, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(DatabaseError de, DatabaseReference dr) {
                     if (de != null) {
@@ -550,12 +576,14 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                                 null, de);
                     }
                 }
-            });
+            });*/
             
         } catch (PvExtPersistenceException ex) {
             Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            
         } finally {
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "<< periodicSendPvimSlmUserData()");
+            
         }
     }
 

@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import springstuff.json.ComponentStateJson;
 import springstuff.json.DeviceComponentResponseJson;
 import springstuff.json.DeviceComponentStateJson;
+import springstuff.json.MachineGpsJson;
 import springstuff.model.ComponentStateVo;
 import springstuff.service.DeviceComponentService;
 
@@ -61,8 +62,28 @@ public class ComponentStateController {
                 ds.setDeviceid(entry.getKey());
                 
                 List<ComponentStateVo> entryComponents = entry.getValue();
+                ComponentStateVo ev = null;
                 for (ComponentStateVo c : entryComponents) {
                     ds.getComponents().add(new ComponentStateJson(c.getComponent(), c.getComponentState()));
+                    ev = c;
+                }
+                
+                if (ev != null) {
+                    String sLat = ev.getLatitude();
+                    String sLon = ev.getLongitude();
+                    
+                    if (sLat != null && sLon != null) {
+                        try {
+                            double lat = Double.parseDouble(sLat);
+                            double lon = Double.parseDouble(sLon);
+                            ds.setLocation(new MachineGpsJson(lat, lon));
+                        } catch (NumberFormatException ex) {
+                            
+                        }
+                    }
+                    if (ev.getDeviceDescr() != null) {
+                        ds.setDeviceType(ev.getDeviceDescr().trim());
+                    }
                 }
                 
                 list.add(ds);

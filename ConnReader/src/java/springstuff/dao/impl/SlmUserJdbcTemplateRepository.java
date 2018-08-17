@@ -11,7 +11,7 @@ import id.dni.pvim.ext.repo.db.vo.ITableVoFactory;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.repo.db.ISlmUserRepository;
 import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
-import id.dni.pvim.ext.telegram.repo.spec.SlmUserIsMobileExistSpec;
+import id.dni.pvim.ext.repo.db.spec.impl.SlmUserIsMobileExistSpec;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;

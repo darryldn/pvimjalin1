@@ -16,6 +16,15 @@ public class FbPvimSlmUserJson {
     private String email;
     private String userType;
     private String loginName;
+    private String locked;
+
+    public String getLocked() {
+        return locked;
+    }
+
+    public void setLocked(String locked) {
+        this.locked = locked;
+    }
 
     public String getUserId() {
         return userId;
@@ -59,9 +68,9 @@ public class FbPvimSlmUserJson {
 
     @Override
     public String toString() {
-        return "FbPvimSlmUserJson{" + "userId=" + userId + ", mobile=" + mobile + ", email=" + email + ", userType=" + userType + ", loginName=" + loginName + '}';
+        return "FbPvimSlmUserJson{" + "userId=" + userId + ", mobile=" + mobile + ", email=" + email + ", userType=" + userType + ", loginName=" + loginName + ", locked=" + locked + '}';
     }
-    
+
     
     
 }
