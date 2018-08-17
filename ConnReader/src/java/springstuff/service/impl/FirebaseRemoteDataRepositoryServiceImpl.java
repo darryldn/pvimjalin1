@@ -290,26 +290,26 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                     try {
                         // no need to check valid key here because it will be
                         // captured in Exception ex below.
-                        geoFire.setLocation(device.getDeviceid().trim(),
-                                new GeoLocation(device.getLocation().getLatitude(),
-                                        device.getLocation().getLongitude()),
-                                new GeoFire.CompletionListener() {
-                            @Override
-                            public void onComplete(String string, DatabaseError de) {
-                                if (de != null) {
-                                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING,
-                                            "Failed send data on device: {0} with error: {1}",
-                                            new Object[]{device.getDeviceid(), de});
-                                } else {
-                                    Logger.getLogger(this.getClass().getName()).log(Level.INFO,
-                                            "Device {0} is saved successfully!",
-                                            new Object[]{device.getDeviceid()});
-                                }
-        //                                synchronized(lock) {
-        //                                    lock.notifyAll();
-        //                                }
-                            }
-                        });
+//                        geoFire.setLocation(device.getDeviceid().trim(),
+//                                new GeoLocation(device.getLocation().getLatitude(),
+//                                        device.getLocation().getLongitude()),
+//                                new GeoFire.CompletionListener() {
+//                            @Override
+//                            public void onComplete(String string, DatabaseError de) {
+//                                if (de != null) {
+//                                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING,
+//                                            "Failed send data on device: {0} with error: {1}",
+//                                            new Object[]{device.getDeviceid(), de});
+//                                } else {
+//                                    Logger.getLogger(this.getClass().getName()).log(Level.INFO,
+//                                            "Device {0} is saved successfully!",
+//                                            new Object[]{device.getDeviceid()});
+//                                }
+//        //                                synchronized(lock) {
+//        //                                    lock.notifyAll();
+//        //                                }
+//                            }
+//                        });
                     } catch (Exception ex) {
                         // geofire throws IllegalArgumentException if latitude / longitude is error
                         // any other error, must not be thrown. Just log it and ignore. May not influence
