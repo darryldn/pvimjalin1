@@ -13,11 +13,15 @@ import id.dni.pvim.ext.web.rest.PVIMGetOpenTicketsByMachineNumberRequest;
 import id.dni.pvim.ext.web.rest.PVIMGetOpenTicketsByMachineNumberResponse;
 import id.dni.pvim.ext.web.rest.PVIMGetTicketByNumberRequest;
 import id.dni.pvim.ext.web.rest.PVIMGetTicketByNumberResponse;
+import id.dni.pvim.ext.web.rest.PVIMGetTicketsByAssigneeRequest;
+import id.dni.pvim.ext.web.rest.PVIMGetTicketsByAssigneeResponse;
 import id.dni.pvim.ext.web.rest.PVIMUpdateTicketRequest;
 import id.dni.pvim.ext.web.rest.PVIMUpdateTicketResponse;
 import id.dni.pvim.ext.web.rest.TicketOperation;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -49,6 +53,8 @@ public class TicketServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "Accept request ticket");
+        
         String[] requestSplits = Commons.getRequestPath(request.getPathInfo(), 2);
         if (requestSplits == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -78,6 +84,12 @@ public class TicketServlet extends HttpServlet {
             TicketOperation oper = new TicketOperation(this.service);
             
             switch (requestOperation) {
+                case "getTicketByAssignee": {
+                    PVIMGetTicketsByAssigneeRequest requestData =
+                            GSON.fromJson(input, PVIMGetTicketsByAssigneeRequest.class);
+                    PVIMGetTicketsByAssigneeResponse responseTickets = oper.findTicketsByAssignee(requestData);
+                    Util.sendAsJson(response, responseTickets);
+                } break;
                 case "getTicketByNumber": {
                     PVIMGetTicketByNumberRequest requestData =
                             GSON.fromJson(input, PVIMGetTicketByNumberRequest.class);

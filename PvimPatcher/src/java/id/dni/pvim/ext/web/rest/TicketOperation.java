@@ -14,6 +14,8 @@ import com.wn.econnect.inbound.wsi.ticket.ObjectFactory;
 import com.wn.econnect.inbound.wsi.ticket.PvimWSException;
 import com.wn.econnect.inbound.wsi.ticket.TicketDto;
 import id.dni.pvim.ext.conf.PatcherConfig;
+import id.dni.pvim.ext.db.config.PVIMDBConnectionFactory;
+import id.dni.pvim.ext.db.trx.IProViewTrx;
 import id.dni.pvim.ext.db.vo.DBTicketNotesVo;
 import id.dni.pvim.ext.repo.boot.RepositoryFactory;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
@@ -35,6 +37,15 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.ws.BindingProvider;
 import javax.xml.ws.handler.Handler;
 import id.dni.pvim.ext.repo.boot.ITicketNotesRepository;
+import id.dni.pvim.ext.repo.db.ISlmUserRepository;
+import id.dni.pvim.ext.repo.db.ITicketRepository;
+import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByEmailSpecification;
+import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByLoginNameSpecification;
+import id.dni.pvim.ext.repo.db.spec.impl.GetTicketByAssigneeIdSpecification;
+import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
+import id.dni.pvim.ext.repo.db.vo.TicketVo;
+import id.dni.pvim.ext.repo.impl.SlmUserRepository;
+import id.dni.pvim.ext.web.in.PVIMTicketAssignee;
 
 /**
  *
@@ -134,13 +145,122 @@ public class TicketOperation {
         return resp;
     }
     
+    public PVIMGetTicketsByAssigneeResponse findTicketsByAssignee(PVIMGetTicketsByAssigneeRequest request) {
+        Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, ">> findTicketsByAssignee");
+        
+        PVIMAuthToken auth = request.getAuth();
+        PVIMTicketAssignee assignee = request.getAssignee();
+        PVIMGetTicketsByAssigneeResponse resp = new PVIMGetTicketsByAssigneeResponse();
+        
+        String assigneeId = null;
+        
+        IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
+        boolean isRollback = false;
+        
+        try {
+            pvimTx.begin();
+            Object conn = pvimTx.getTrxConnection();
+            
+            if (assignee != null) {
+                
+                if (Commons.isEmptyStrIgnoreSpaces(assignee.getUserID())) {
+                    // obtain the assignee id via loginname or email
+
+                    ISlmUserRepository userRepo = RepositoryFactory.getInstance().getSlmUserRepository(conn);
+                    List<SlmUserVo> users = Collections.EMPTY_LIST;
+
+                    if (!Commons.isEmptyStrIgnoreSpaces(assignee.getLoginname())) {
+                        // obtain via loginname
+                        Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
+                                " - find assignee with loginname: {0}", new Object[]{assignee.getLoginname()});
+                        users = userRepo.query(new GetPvimUserByLoginNameSpecification(assignee.getLoginname()));
+
+                    } else if (!Commons.isEmptyStrIgnoreSpaces(assignee.getEmail())) {
+                        // obtain via email
+                        Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
+                                " - find assignee with email: {0}", new Object[]{assignee.getEmail()});
+                        users = userRepo.query(new GetPvimUserByEmailSpecification(assignee.getEmail()));
+
+                    } else {
+                        // error, cannot find the assignee!
+                        assigneeId = null;
+
+                    }
+
+                    if (users.size() == 1) {
+                        assigneeId = users.get(0).getUserID();
+                    }
+
+                } else {
+                    assigneeId = assignee.getUserID();
+
+                }
+            }
+            
+            if (!Commons.isEmptyStrIgnoreSpaces(assigneeId)) {
+                Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
+                            " - find assignee with assigneeId: {0}", new Object[]{assigneeId});
+                ITicketRepository ticketRepo = RepositoryFactory.getInstance().getTicketRepository(conn);
+                List<TicketVo> tickets = ticketRepo.query(new GetTicketByAssigneeIdSpecification(assigneeId));
+                List<RestTicketDto> restTickets = new ArrayList<>();
+                for (TicketVo ticket : tickets) {
+                    Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
+                            " - Tickets with specified assignee: {0}", new Object[]{ticket.getTicketNumber()});
+                    PVIMGetTicketByNumberRequest req = new PVIMGetTicketByNumberRequest();
+                    req.setAuth(auth);
+                    req.setTicketNumber(ticket.getTicketNumber());
+                    PVIMGetTicketByNumberResponse ticketResp = findTicket(req);
+                    if (ticketResp.getTicket() != null) {
+                        restTickets.add(ticketResp.getTicket());
+                    }
+                }
+                resp.setTickets(restTickets);
+
+            } else {
+                // no assignee id found, report error here
+                OperationError err = new OperationError();
+                err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+                err.setErrMsg("No Assignee found");
+                resp.setErr(err);
+
+            }
+            
+            isRollback = false;
+            
+        } catch (Exception ex) {
+            Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, null, ex);
+            isRollback = true;
+            
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_DATABASE_ERROR);
+            err.setErrMsg("Database error, please contact administrator");
+            resp.setErr(err);
+            
+        } finally {
+            try {
+                if (isRollback) {
+                    pvimTx.rollback();
+                } else {
+                    pvimTx.commit();
+                }
+                
+                pvimTx.close();
+            } catch (PvExtPersistenceException ex) {
+                Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "<< findTicketsByAssignee");
+        return resp;
+    }
+    
     public PVIMGetTicketByNumberResponse findTicket(PVIMGetTicketByNumberRequest request) {
         
         String ticketNumber = request.getTicketNumber();
         PVIMAuthToken auth = request.getAuth();
         PVIMGetTicketByNumberResponse resp = new PVIMGetTicketByNumberResponse();
         
-        Logger.getLogger(TicketOperation.class.getName()).log(Level.FINEST, "ticketNumber: {0} auth: {1}", 
+        Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "ticketNumber: {0} auth: {1}", 
                 new Object[]{ticketNumber, auth});
         
         try {
@@ -148,7 +268,7 @@ public class TicketOperation {
             if (ticketDto != null) {
                 JAXBElement<String> jaxbNotes = ticketDto.getNote();
                 if (jaxbNotes == null || Commons.isEmptyStrIgnoreSpaces(jaxbNotes.getValue())) {
-                    Logger.getLogger(TicketOperation.class.getName()).log(Level.FINEST, "No notes given. Read from database!");
+                    Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "No notes given. Read from database!");
                     
                     // Obtain ticket notes and append it in ticketDto!
                     ITicketNotesRepository ticketNotesDao = RepositoryFactory.getInstance().getTicketNotesRepository();
@@ -157,7 +277,7 @@ public class TicketOperation {
                     for (DBTicketNotesVo ticketNote : ticketNotes) {
                         sb.append(ticketNote.getNotes()).append("\n");
                     }
-                    Logger.getLogger(TicketOperation.class.getName()).log(Level.FINEST, "Obtain notes: [{0}]", sb);
+                    Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, "Obtain notes: [{0}]", sb);
                     
                     ObjectFactory objFactory = new ObjectFactory();
                     JAXBElement<String> xnote = objFactory.createTicketDtoNote(sb.toString()); 
