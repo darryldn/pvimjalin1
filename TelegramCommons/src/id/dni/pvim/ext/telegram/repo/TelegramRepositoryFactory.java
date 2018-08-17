@@ -6,7 +6,7 @@
 package id.dni.pvim.ext.telegram.repo;
 
 import id.dni.pvim.ext.repo.db.ISlmUserRepository;
-import id.dni.pvim.ext.telegram.repo.impl.SlmUserRepository;
+import id.dni.pvim.ext.repo.impl.SlmUserRepository;
 import id.dni.pvim.ext.telegram.repo.impl.TelegramSubscribersRepository;
 import java.sql.Connection;
 
