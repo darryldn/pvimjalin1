@@ -7,6 +7,7 @@ package id.dni.pvim.ext.web.rest;
 
 import id.dni.pvim.ext.web.in.OperationError;
 import id.dni.pvim.ext.web.in.PVIMLocation;
+import java.util.List;
 
 /**
  *
@@ -15,7 +16,7 @@ import id.dni.pvim.ext.web.in.PVIMLocation;
 public class PVIMEngineerLocationResponse {
     
     private OperationError err;
-    private PVIMLocation loc;
+    private List<PVIMLocation> loc;
 
     public OperationError getErr() {
         return err;
@@ -25,11 +26,11 @@ public class PVIMEngineerLocationResponse {
         this.err = err;
     }
 
-    public PVIMLocation getLoc() {
+    public List<PVIMLocation> getLoc() {
         return loc;
     }
 
-    public void setLoc(PVIMLocation loc) {
+    public void setLoc(List<PVIMLocation> loc) {
         this.loc = loc;
     }
     

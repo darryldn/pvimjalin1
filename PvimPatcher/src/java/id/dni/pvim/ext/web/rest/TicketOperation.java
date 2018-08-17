@@ -216,6 +216,11 @@ public class TicketOperation {
                     assigneeId = assignee.getUserID();
 
                 }
+                
+            } else {
+                
+                getAllTickets = true;
+                
             }
             
             ITicketRepository ticketRepo = RepositoryFactory.getInstance().getTicketRepository(conn);

@@ -16,6 +16,7 @@ import id.dni.pvim.ext.err.PVIMErrorCodes;
 import id.dni.pvim.ext.repo.db.IDBMachineBasedataRepository;
 import id.dni.pvim.ext.repo.db.ISlmLocationRepository;
 import id.dni.pvim.ext.repo.db.spec.impl.DeviceGpsBasedataSpecification;
+import id.dni.pvim.ext.repo.db.spec.impl.GetAllPvimEngineerLocationSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetPvimEngineerLocationByIdSpecification;
 import id.dni.pvim.ext.repo.db.vo.SlmLocationVo;
 import id.dni.pvim.ext.web.in.OperationError;
@@ -23,6 +24,7 @@ import id.dni.pvim.ext.web.in.PVAuthToken;
 import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import id.dni.pvim.ext.web.in.PVIMLocation;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -117,7 +119,9 @@ public class LocationOperation {
             }
             
             if (isSuccess) {
-                response.setLoc(reqLoc);
+                List<PVIMLocation> lc = new ArrayList<>();
+                lc.add(reqLoc);
+                response.setLoc(lc);
             } else {
                 OperationError err = new OperationError();
                 err.setErrCode("" + PVIMErrorCodes.E_DATABASE_ERROR);
@@ -153,15 +157,7 @@ public class LocationOperation {
     public PVIMEngineerLocationResponse getEngineerLocation(PVIMEngineerLocationRequest request) {
         PVIMAuthToken auth = request.getAuth(); // not used
         PVIMLocation reqLoc = request.getLoc();
-        
         PVIMEngineerLocationResponse response = new PVIMEngineerLocationResponse();
-        if (reqLoc == null) {
-            OperationError err = new OperationError();
-            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
-            err.setErrMsg("No Input given");
-            response.setErr(err);
-            return response;
-        }
         
         IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
         boolean isRollback = false;
@@ -169,8 +165,14 @@ public class LocationOperation {
             pvimTx.begin();
             Object trxObject = pvimTx.getTrxConnection();
             ISlmLocationRepository slmLocationRepos = RepositoryFactory.getInstance().getSlmLocationRepository(trxObject);
-            List<SlmLocationVo> loclist = slmLocationRepos.query(new GetPvimEngineerLocationByIdSpecification(reqLoc.getId()));
+            List<SlmLocationVo> loclist;
+            if (reqLoc == null) {
+                loclist = slmLocationRepos.query(new GetAllPvimEngineerLocationSpecification());
+            } else {
+                loclist = slmLocationRepos.query(new GetPvimEngineerLocationByIdSpecification(reqLoc.getId()));
+            }
             
+            List<PVIMLocation> result = new ArrayList<>();
             for (SlmLocationVo loc : loclist) {
                 PVIMLocation ploc = new PVIMLocation();
                 ploc.setId(loc.getEngineerID());
@@ -181,12 +183,12 @@ public class LocationOperation {
                     ploc.setLongitude(loc.getLongitude().doubleValue());
                 }
                 ploc.setNotes(loc.getNotes());
-                response.setLoc(ploc);
-                
-                break;
+                result.add(ploc);
             }
             
-            if (response.getLoc() == null) {
+            response.setLoc(result);
+            
+            if (response.getLoc().isEmpty()) {
                 OperationError err = new OperationError();
                 err.setErrCode(PVIMErrorCodes.E_INPUT_ERROR + "");
                 err.setErrMsg("No Engineer found");
