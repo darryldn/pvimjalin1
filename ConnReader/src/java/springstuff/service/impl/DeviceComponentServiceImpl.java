@@ -71,7 +71,23 @@ public class DeviceComponentServiceImpl implements DeviceComponentService {
     @Override
     @Transactional(transactionManager = "pvTransactionManager", rollbackFor = PvExtPersistenceException.class)
     public Map<String, List<ComponentStateVo>> getAllDevices() throws PvExtPersistenceException {
-        List<ComponentStateVo> devices = this.componentStateRepo.query(new GetAllComponentStateWithDeviceDescrSpec());
+        return getAllDevices(10, 1);
+//        List<ComponentStateVo> devices = this.componentStateRepo.query(new GetAllComponentStateWithDeviceDescrSpec());
+//        Map<String, List<ComponentStateVo>> result = new HashMap<>();
+//        for (ComponentStateVo c : devices) {
+//            if (!result.containsKey(c.getDeviceID())) {
+//                result.put(c.getDeviceID(), new ArrayList<>());
+//            }
+//            result.get(c.getDeviceID()).add(c);
+//        }
+//        return result;
+    }
+
+    @Override
+    @Transactional(transactionManager = "pvTransactionManager", rollbackFor = PvExtPersistenceException.class)
+    public Map<String, List<ComponentStateVo>> getAllDevices(int pageSize, int pageNum) throws PvExtPersistenceException {
+        List<ComponentStateVo> devices = this.componentStateRepo.query(new 
+                GetAllComponentStateWithDeviceDescrSpec(pageSize, pageNum));
         Map<String, List<ComponentStateVo>> result = new HashMap<>();
         for (ComponentStateVo c : devices) {
             if (!result.containsKey(c.getDeviceID())) {
