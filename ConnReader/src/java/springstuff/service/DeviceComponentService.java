@@ -20,6 +20,8 @@ public interface DeviceComponentService {
     
     public Map < String, List<ComponentStateVo> > getAllDevices() throws PvExtPersistenceException;
     
+    public Map < String, List<ComponentStateVo> > getAllDevices(int pageSize, int pageNum) throws PvExtPersistenceException;
+    
     public void sendToParseServer() throws PvExtPersistenceException;
     
 }
