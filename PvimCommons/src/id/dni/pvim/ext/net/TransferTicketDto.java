@@ -5,6 +5,7 @@
  */
 package id.dni.pvim.ext.net;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,6 +16,15 @@ public class TransferTicketDto {
     private long lastupdated;
     private Map<String, Object> ticketMap;
     private String ticketId;
+    private List<String> accountList;
+
+    public List<String> getAccountList() {
+        return accountList;
+    }
+
+    public void setAccountList(List<String> accountList) {
+        this.accountList = accountList;
+    }
 
     public TransferTicketDto(String ticketId) {
         this.ticketId = ticketId;
