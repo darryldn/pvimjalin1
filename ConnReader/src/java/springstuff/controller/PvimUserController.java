@@ -6,6 +6,7 @@
 package springstuff.controller;
 
 import com.google.gson.Gson;
+import id.dni.ext.web.Util;
 import id.dni.ext.web.ws.obj.firebase.FbPvimSlmUserJson;
 import id.dni.pvim.ext.err.PVIMErrorCodes;
 import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
@@ -13,6 +14,7 @@ import id.dni.pvim.ext.web.in.OperationError;
 import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,7 +43,7 @@ public class PvimUserController {
             produces = MediaType.APPLICATION_JSON_VALUE, 
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String getPvimUser(@RequestBody String userJson) {
+    public ResponseEntity<String> getPvimUser(@RequestBody String userJson) {
         Gson gson = new Gson();
         PVIMGetUserRequest request = gson.fromJson(userJson, PVIMGetUserRequest.class);
         PVIMGetUserResponse resp = new PVIMGetUserResponse();
@@ -54,7 +56,7 @@ public class PvimUserController {
             err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
             err.setErrMsg("No authentication token given");
             resp.setErr(err);
-            return gson.toJson(resp);
+            return Util.returnJson(resp);
         }
         
         // bypass the user/password for now
@@ -64,7 +66,7 @@ public class PvimUserController {
             err.setErrCode("" + PVIMErrorCodes.E_CONFIG);
             err.setErrMsg("Username or password wrong");
             resp.setErr(err);
-            return gson.toJson(resp);
+            return Util.returnJson(resp);
         }
         
         PVIMGetUserRequestPayload payload = request.getUser();
@@ -74,7 +76,7 @@ public class PvimUserController {
             err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
             err.setErrMsg("No user data given");
             resp.setErr(err);
-            return gson.toJson(resp);
+            return Util.returnJson(resp);
         }
         
         SlmUserVo targetUser;
@@ -89,7 +91,7 @@ public class PvimUserController {
             err.setErrCode("" + PVIMErrorCodes.E_CONFIG);
             err.setErrMsg("Payload user account not found");
             resp.setErr(err);
-            return gson.toJson(resp);
+            return Util.returnJson(resp);
         }
         
         FbPvimSlmUserJson fbUserJson = new FbPvimSlmUserJson();
@@ -101,7 +103,7 @@ public class PvimUserController {
         fbUserJson.setUserType(targetUser.getUserType());
         
         resp.setUser(fbUserJson);
-        return gson.toJson(resp);
+        return Util.returnJson(resp);
     }
     
 }

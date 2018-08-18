@@ -7,6 +7,7 @@ package springstuff.controller;
 
 import com.google.gson.Gson;
 import com.wn.econnect.inbound.wsi.ticket.PvimWSException;
+import id.dni.ext.web.Util;
 import id.dni.ext.web.ws.obj.RestTicketDto;
 import id.dni.ext.web.ws.obj.SendTicketRemoteResponse;
 import id.dni.pvim.ext.net.TransferTicketDto;
@@ -18,6 +19,7 @@ import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,7 +58,7 @@ public class TicketController {
             produces = MediaType.APPLICATION_JSON_VALUE, 
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String sendTicketRemote(@RequestBody String ticketJson) {
+    public ResponseEntity<String> sendTicketRemote(@RequestBody String ticketJson) {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, ">> sendTicketRemote");
         
         Gson gson = new Gson();
@@ -81,7 +83,8 @@ public class TicketController {
         
         String jsonret = null;
         try {
-            return jsonret = gson.toJson(resp);
+            jsonret = gson.toJson(resp);
+            return Util.returnJsonStr(jsonret);
         } finally {
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "<< sendTicketRemote {0}", jsonret);
         }
@@ -91,7 +94,7 @@ public class TicketController {
             produces = MediaType.APPLICATION_JSON_VALUE, 
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String removeTicketRemote(@RequestBody String ticketJson) {
+    public ResponseEntity<String> removeTicketRemote(@RequestBody String ticketJson) {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, ">> removeTicketRemote");
         
         Gson gson = new Gson();
@@ -116,7 +119,8 @@ public class TicketController {
         
         String jsonret = null;
         try {
-            return jsonret = gson.toJson(resp);
+            jsonret = gson.toJson(resp);
+            return Util.returnJsonStr(jsonret);
         } finally {
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "<< removeTicketRemote {0}", jsonret);
         }
@@ -126,7 +130,7 @@ public class TicketController {
             produces = MediaType.APPLICATION_JSON_VALUE, 
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String pvimUpdateTicket(@RequestBody String ticketJson) {
+    public ResponseEntity<String> pvimUpdateTicket(@RequestBody String ticketJson) {
         Gson gson = new Gson();
         PVIMUpdateTicketRequest req = gson.fromJson(ticketJson, PVIMUpdateTicketRequest.class);
         SendTicketRemoteResponse resp = new SendTicketRemoteResponse();
@@ -140,7 +144,8 @@ public class TicketController {
             err.setErrMsg(((PvimWSException) ex.getCause()).getFaultInfo().getErrorMsg().getValue());
             resp.setErr(err);
         }
-        return gson.toJson(resp);
+        return Util.returnJson(resp);
+//        return gson.toJson(resp);
     }
     
 }
