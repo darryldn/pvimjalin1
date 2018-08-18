@@ -7,6 +7,7 @@ package id.dni.pvim.ext.web.rest;
 
 import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import id.dni.pvim.ext.web.in.PVIMLocation;
+import id.dni.pvim.ext.web.in.PaginationRequest;
 
 /**
  *
@@ -16,6 +17,7 @@ public class PVIMEngineerLocationRequest {
     
     private PVIMAuthToken auth;
     private PVIMLocation loc;
+    private PaginationRequest page;
 
     public PVIMAuthToken getAuth() {
         return auth;
@@ -31,6 +33,14 @@ public class PVIMEngineerLocationRequest {
 
     public void setLoc(PVIMLocation loc) {
         this.loc = loc;
+    }
+
+    public PaginationRequest getPage() {
+        return page;
+    }
+
+    public void setPage(PaginationRequest page) {
+        this.page = page;
     }
     
     

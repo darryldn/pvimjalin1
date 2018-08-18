@@ -23,6 +23,7 @@ import id.dni.pvim.ext.web.in.OperationError;
 import id.dni.pvim.ext.web.in.PVAuthToken;
 import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import id.dni.pvim.ext.web.in.PVIMLocation;
+import id.dni.pvim.ext.web.in.PaginationRequest;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -158,6 +159,12 @@ public class LocationOperation {
         PVIMAuthToken auth = request.getAuth(); // not used
         PVIMLocation reqLoc = request.getLoc();
         PVIMEngineerLocationResponse response = new PVIMEngineerLocationResponse();
+        PaginationRequest page = request.getPage();
+        int pageNum = -1, pageSize = -1;
+        if (page != null) {
+            pageNum = page.getPageNum();
+            pageSize = page.getPageSize();
+        }
         
         IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
         boolean isRollback = false;
@@ -167,7 +174,7 @@ public class LocationOperation {
             ISlmLocationRepository slmLocationRepos = RepositoryFactory.getInstance().getSlmLocationRepository(trxObject);
             List<SlmLocationVo> loclist;
             if (reqLoc == null) {
-                loclist = slmLocationRepos.query(new GetAllPvimEngineerLocationSpecification());
+                loclist = slmLocationRepos.query(new GetAllPvimEngineerLocationSpecification(pageSize, pageNum));
             } else {
                 loclist = slmLocationRepos.query(new GetPvimEngineerLocationByIdSpecification(reqLoc.getId()));
             }

@@ -39,15 +39,14 @@ import javax.xml.ws.handler.Handler;
 import id.dni.pvim.ext.repo.boot.ITicketNotesRepository;
 import id.dni.pvim.ext.repo.db.ISlmUserRepository;
 import id.dni.pvim.ext.repo.db.ITicketRepository;
-import id.dni.pvim.ext.repo.db.spec.impl.GetAllPvimUsersSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetAllTicketsSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByEmailSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByLoginNameSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetTicketByAssigneeIdSpecification;
 import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
 import id.dni.pvim.ext.repo.db.vo.TicketVo;
-import id.dni.pvim.ext.repo.impl.SlmUserRepository;
 import id.dni.pvim.ext.web.in.PVIMTicketAssignee;
+import id.dni.pvim.ext.web.in.PaginationRequest;
 
 /**
  *
@@ -224,17 +223,23 @@ public class TicketOperation {
             }
             
             ITicketRepository ticketRepo = RepositoryFactory.getInstance().getTicketRepository(conn);
+            PaginationRequest page = request.getPage();
+            int pageNum = -1, pageSize = -1;
+            if (page != null) {
+                pageNum = page.getPageNum();
+                pageSize = page.getPageSize();
+            }
             
             if (!Commons.isEmptyStrIgnoreSpaces(assigneeId)) {
                 Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
                             " - find assignee with assigneeId: {0}", new Object[]{assigneeId});
-                List<TicketVo> tickets = ticketRepo.query(new GetTicketByAssigneeIdSpecification(assigneeId));
+                List<TicketVo> tickets = ticketRepo.query(new GetTicketByAssigneeIdSpecification(assigneeId, pageSize, pageNum));
                 resp.setTickets(getTicketsFromWs(auth, tickets));
 
             } else if (getAllTickets) {
                 Logger.getLogger(TicketOperation.class.getName()).log(Level.INFO, 
                         " - find all tickets");
-                List<TicketVo> tickets = ticketRepo.query(new GetAllTicketsSpecification());
+                List<TicketVo> tickets = ticketRepo.query(new GetAllTicketsSpecification(pageSize, pageNum));
                 resp.setTickets(getTicketsFromWs(auth, tickets));
                 
             } else {

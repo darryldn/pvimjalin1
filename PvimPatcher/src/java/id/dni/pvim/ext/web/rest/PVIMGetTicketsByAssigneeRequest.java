@@ -7,6 +7,7 @@ package id.dni.pvim.ext.web.rest;
 
 import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import id.dni.pvim.ext.web.in.PVIMTicketAssignee;
+import id.dni.pvim.ext.web.in.PaginationRequest;
 
 /**
  *
@@ -16,6 +17,7 @@ public class PVIMGetTicketsByAssigneeRequest {
     
     private PVIMAuthToken auth;
     private PVIMTicketAssignee assignee;
+    private PaginationRequest page;
 
     public PVIMAuthToken getAuth() {
         return auth;
@@ -31,6 +33,14 @@ public class PVIMGetTicketsByAssigneeRequest {
 
     public void setAssignee(PVIMTicketAssignee assignee) {
         this.assignee = assignee;
+    }
+
+    public PaginationRequest getPage() {
+        return page;
+    }
+
+    public void setPage(PaginationRequest page) {
+        this.page = page;
     }
     
     
