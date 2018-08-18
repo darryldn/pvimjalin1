@@ -5,7 +5,7 @@
  */
 package springstuff.controller;
 
-import com.google.gson.Gson;
+import id.dni.ext.web.Util;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import id.dni.pvim.ext.web.in.OperationError;
 import java.util.ArrayList;
@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -44,7 +45,11 @@ public class ComponentStateController {
     
     @RequestMapping(value = "/device", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String getDeviceComponents(@RequestParam(value = "id", required = false) String deviceID) {
+    public ResponseEntity<String> getDeviceComponents(
+            @RequestParam(value = "id", required = false) String deviceID,
+            @RequestParam(value = "pageSize", required = false) Integer oPageSize,
+            @RequestParam(value = "pageNum", required = false) Integer oPageNum
+    ) {
         DeviceComponentResponseJson response = new DeviceComponentResponseJson();
         try {
             Map<String, List<ComponentStateVo>> result;
@@ -52,7 +57,10 @@ public class ComponentStateController {
                 result = new HashMap<>();
                 result.put(deviceID, deviceComponentService.getDeviceComponentState(deviceID));
             } else {
-                result = this.deviceComponentService.getAllDevices();
+                int pageSize = oPageSize == null ? -1 : oPageSize;
+                int pageNum = oPageNum == null ? -1 : oPageNum;
+                
+                result = this.deviceComponentService.getAllDevices(pageSize, pageNum);
             }
             List<DeviceComponentStateJson> list = new ArrayList<>();
             
@@ -99,8 +107,14 @@ public class ComponentStateController {
             
         }
         
-        Gson gson = new Gson();
-        return gson.toJson(response);
+        return Util.returnJson(response);
+        
+//        Gson gson = new Gson();
+//        
+//        final HttpHeaders httpHeaders = new HttpHeaders();
+//        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+//        return new ResponseEntity<>(gson.toJson(response), httpHeaders, HttpStatus.OK);
+        //return gson.toJson(response);
     }
     
 }
