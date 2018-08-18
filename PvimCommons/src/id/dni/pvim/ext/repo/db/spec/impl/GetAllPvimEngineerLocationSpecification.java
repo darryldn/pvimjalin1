@@ -5,6 +5,8 @@
  */
 package id.dni.pvim.ext.repo.db.spec.impl;
 
+import id.dni.pvim.ext.repo.db.pagination.IPaginator;
+import id.dni.pvim.ext.repo.db.pagination.Mssql2012Paginator;
 import id.dni.pvim.ext.repo.db.spec.ISqlSpecification;
 import id.dni.pvim.ext.repo.db.vo.SlmLocationVo;
 
@@ -26,9 +28,32 @@ public class GetAllPvimEngineerLocationSpecification implements ISqlSpecificatio
                     .append(SlmLocationVo.TABLE_NAME).append(" ")
             .toString();
     
+    private final int pageSize;
+    private final int pageNum;
+    public GetAllPvimEngineerLocationSpecification() {
+        this(-1, -1);
+    }
+    
+    public GetAllPvimEngineerLocationSpecification(int pageSize, int pageNum) {
+        this.pageNum = pageNum;
+        this.pageSize = pageSize;
+    }
+    
     @Override
     public String toParameterizedSqlQuery() {
-        return SQL;
+        if (this.pageNum > 0 && this.pageSize > 0) {
+            IPaginator paginator = new Mssql2012Paginator.Builder()
+                    .setSql(SQL)
+                    .setOrderByColumn(SlmLocationVo.FIELD_ENGINEER_ID)
+                    .setPageNumber(pageNum)
+                    .setPageSize(pageSize)
+                    .build();
+            return paginator.getPaginatedSql();
+            
+        } else {
+            return SQL;
+            
+        }
     }
 
     @Override
