@@ -350,7 +350,7 @@ public class TelegramNotificationMessageListener implements MessageListener {
      * @param ticketId
      * @param statusId 
      */
-    private void sendToFirebase(final String ticketId, final String statusId) {
+    private void sendToFirebase(final String ticketId, final String statusId, final List<String> accounts) {
         if (this.firebaseService != null) {
             if (this.pvimHibernateTemplate != null) {
                 this.pvimHibernateTemplate.execute(new HibernateCallback() {
@@ -400,6 +400,7 @@ public class TelegramNotificationMessageListener implements MessageListener {
                             TransferTicketDto trs = new TransferTicketDto(ticketId);
                             trs.setLastupdated(lastupdated);
                             trs.setTicketMap(ticketMap);
+                            trs.setAccountList(accounts);
                             
                             if ("7".equals(statusId)) { // ticket in Deleted state
                                 firebaseService.remove(trs);
@@ -502,6 +503,17 @@ public class TelegramNotificationMessageListener implements MessageListener {
         result.addAll(errUsers);
         return result;
     }
+    
+    private List<String> extractAccounts(String accounts) {
+        String[] listAccounts = accounts.split(",");
+        List<String> trimmedAccounts = new ArrayList<>();
+        for (int i = 0; i < listAccounts.length; ++i) {
+            if (!Commons.isEmptyStrIgnoreSpaces(listAccounts[i])) {
+                trimmedAccounts.add(listAccounts[i].trim());
+            }
+        }
+        return trimmedAccounts;
+    }
 
     @Override
     public void onMessage(Message message) {
@@ -521,6 +533,9 @@ public class TelegramNotificationMessageListener implements MessageListener {
                 this.logger.logInfo("accounts : " + accounts + "; ticketId : " + ticketId + "; ");
 //                nr.setReceiver(accounts);
 
+                if (context == null) {
+                    context = "";
+                }
                 // context is the content template of the notification / reminder, in plain text and all
                 // ${XXX} has been replaced with actual content!!
                 // see NotificationTemplate in Pvim console.
@@ -547,8 +562,10 @@ public class TelegramNotificationMessageListener implements MessageListener {
                     isError = true;
 
                 } else {
+                    List<String> trimmedAccounts = extractAccounts(accounts);
+                    
                     logger.logInfo("Sending to firebase server");
-                    this.sendToFirebase(ticketId, statusId);
+                    this.sendToFirebase(ticketId, statusId, trimmedAccounts);
 
 //                    if ("15".equals(statusId) || "4".equals(statusId)) {
 //                        // 15 = suspended, 4 = fixed
@@ -562,21 +579,15 @@ public class TelegramNotificationMessageListener implements MessageListener {
 
                     // It seems that telegram won't be used. If so, comment out
                     // the following if block.
-                    if (context != null) {
+                    //if (context != null) {
+                    if (!Commons.isEmptyStrIgnoreSpaces(context)) {
                         List<TelegramRequestResult> result = Collections.EMPTY_LIST;
 
                         if (context.startsWith(DISPATCH_PREFIX)) { // set keyword to activate "dispatch"-ing tickets to technicians
                             context = context.substring(DISPATCH_PREFIX.length());
                             result = dispatchTicket(ticket, context);
 
-                        } else {
-                            String[] listAccounts = accounts.split(",");
-                            List<String> trimmedAccounts = new ArrayList<>();
-                            for (int i = 0; i < listAccounts.length; ++i) {
-                                if (!Commons.isEmptyStrIgnoreSpaces(listAccounts[i])) {
-                                    trimmedAccounts.add(listAccounts[i].trim());
-                                }
-                            }
+                        } else {        
                             if (!trimmedAccounts.isEmpty()) {
                                 String[] sfa = new String[trimmedAccounts.size()];
                                 sfa = trimmedAccounts.toArray(sfa);
