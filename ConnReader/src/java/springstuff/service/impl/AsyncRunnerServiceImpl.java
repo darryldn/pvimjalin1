@@ -5,9 +5,12 @@
  */
 package springstuff.service.impl;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import springstuff.service.AsyncRunnerService;
 
@@ -39,6 +42,18 @@ public class AsyncRunnerServiceImpl implements AsyncRunnerService {
         } catch (Exception ex) {
             Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    @Override
+    @Async
+    public <T> Future<T> doAsync(Callable<T> callable) {
+        T ret = null;
+        try {
+            ret = callable.call();
+        } catch (Exception ex) {
+            Logger.getLogger(AsyncRunnerServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return new AsyncResult<>(ret);
     }
     
 }

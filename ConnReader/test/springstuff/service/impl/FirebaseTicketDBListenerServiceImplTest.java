@@ -110,10 +110,10 @@ public class FirebaseTicketDBListenerServiceImplTest {
         DatabaseReference ref = fdb.getDatabaseReference("/tickets");
         
         FirebaseRemoteDataRepositoryServiceImpl serv = new FirebaseRemoteDataRepositoryServiceImpl();
-        serv.setFirebaseDB(fdb);
-        serv.setRemoteTicketRepository(inmem);
-        serv.setTicketsFirebaseDBPath("/tickets");
-        serv.setMachineStatusFirebaseDBPath("/ATMs");
+//        serv.setFirebaseDB(fdb);
+//        serv.setRemoteTicketRepository(inmem);
+//        serv.setTicketsFirebaseDBPath("/tickets");
+//        serv.setMachineStatusFirebaseDBPath("/ATMs");
         
         List<TransferTicketDto> tickets = new ArrayList<>();
         TransferTicketDto tic = new TransferTicketDto("testExecuteListener");
@@ -221,10 +221,10 @@ public class FirebaseTicketDBListenerServiceImplTest {
         DatabaseReference ref = fdb.getDatabaseReference("/tickets");
         
         FirebaseRemoteDataRepositoryServiceImpl serv = new FirebaseRemoteDataRepositoryServiceImpl();
-        serv.setFirebaseDB(fdb);
-        serv.setRemoteTicketRepository(inmem);
-        serv.setTicketsFirebaseDBPath("/tickets");
-        serv.setMachineStatusFirebaseDBPath("/ATMs");
+//        serv.setFirebaseDB(fdb);
+//        serv.setRemoteTicketRepository(inmem);
+//        serv.setTicketsFirebaseDBPath("/tickets");
+//        serv.setMachineStatusFirebaseDBPath("/ATMs");
         
         List<TransferTicketDto> tickets = new ArrayList<>();
         TransferTicketDto tic = new TransferTicketDto("testListenerPvimResetEngineerID");
@@ -327,10 +327,10 @@ public class FirebaseTicketDBListenerServiceImplTest {
         DatabaseReference ref = fdb.getDatabaseReference("/tickets");
         
         FirebaseRemoteDataRepositoryServiceImpl serv = new FirebaseRemoteDataRepositoryServiceImpl();
-        serv.setFirebaseDB(fdb);
-        serv.setRemoteTicketRepository(inmem);
-        serv.setTicketsFirebaseDBPath("/tickets");
-        serv.setMachineStatusFirebaseDBPath("/ATMs");
+//        serv.setFirebaseDB(fdb);
+//        serv.setRemoteTicketRepository(inmem);
+//        serv.setTicketsFirebaseDBPath("/tickets");
+//        serv.setMachineStatusFirebaseDBPath("/ATMs");
         
         List<TransferTicketDto> tickets = new ArrayList<>();
         TransferTicketDto tic = new TransferTicketDto("testListenerPvimThrowException");
@@ -428,10 +428,10 @@ public class FirebaseTicketDBListenerServiceImplTest {
         DatabaseReference ref = fdb.getDatabaseReference("/tickets");
         
         FirebaseRemoteDataRepositoryServiceImpl serv = new FirebaseRemoteDataRepositoryServiceImpl();
-        serv.setFirebaseDB(fdb);
-        serv.setRemoteTicketRepository(inmem);
-        serv.setTicketsFirebaseDBPath("/tickets");
-        serv.setMachineStatusFirebaseDBPath("/ATMs");
+//        serv.setFirebaseDB(fdb);
+//        serv.setRemoteTicketRepository(inmem);
+//        serv.setTicketsFirebaseDBPath("/tickets");
+//        serv.setMachineStatusFirebaseDBPath("/ATMs");
         
         List<TransferTicketDto> tickets = new ArrayList<>();
         TransferTicketDto tic = new TransferTicketDto("testListenerPvimNoEngineerID");
@@ -532,10 +532,10 @@ public class FirebaseTicketDBListenerServiceImplTest {
         DatabaseReference ref = fdb.getDatabaseReference("/tickets");
         
         FirebaseRemoteDataRepositoryServiceImpl serv = new FirebaseRemoteDataRepositoryServiceImpl();
-        serv.setFirebaseDB(fdb);
-        serv.setRemoteTicketRepository(inmem);
-        serv.setTicketsFirebaseDBPath("/tickets");
-        serv.setMachineStatusFirebaseDBPath("/ATMs");
+//        serv.setFirebaseDB(fdb);
+//        serv.setRemoteTicketRepository(inmem);
+//        serv.setTicketsFirebaseDBPath("/tickets");
+//        serv.setMachineStatusFirebaseDBPath("/ATMs");
         
         List<TransferTicketDto> tickets = new ArrayList<>();
         TransferTicketDto tic = new TransferTicketDto("testNormalUpdateReupdateTicketInFirebase");
@@ -659,10 +659,10 @@ public class FirebaseTicketDBListenerServiceImplTest {
         DatabaseReference ref = fdb.getDatabaseReference("/tickets");
         
         FirebaseRemoteDataRepositoryServiceImpl serv = new FirebaseRemoteDataRepositoryServiceImpl();
-        serv.setFirebaseDB(fdb);
-        serv.setRemoteTicketRepository(inmem);
-        serv.setTicketsFirebaseDBPath("/tickets");
-        serv.setMachineStatusFirebaseDBPath("/ATMs");
+//        serv.setFirebaseDB(fdb);
+//        serv.setRemoteTicketRepository(inmem);
+//        serv.setTicketsFirebaseDBPath("/tickets");
+//        serv.setMachineStatusFirebaseDBPath("/ATMs");
         
         List<TransferTicketDto> tickets = new ArrayList<>();
         TransferTicketDto tic = new TransferTicketDto("testThrowExceptionErrUpdateInFirebase");
@@ -823,10 +823,10 @@ public class FirebaseTicketDBListenerServiceImplTest {
         DatabaseReference ref = fdb.getDatabaseReference("/tickets");
         
         FirebaseRemoteDataRepositoryServiceImpl serv = new FirebaseRemoteDataRepositoryServiceImpl();
-        serv.setFirebaseDB(fdb);
-        serv.setRemoteTicketRepository(inmem);
-        serv.setTicketsFirebaseDBPath("/tickets");
-        serv.setMachineStatusFirebaseDBPath("/ATMs");
+//        serv.setFirebaseDB(fdb);
+//        serv.setRemoteTicketRepository(inmem);
+//        serv.setTicketsFirebaseDBPath("/tickets");
+//        serv.setMachineStatusFirebaseDBPath("/ATMs");
         
         List<TransferTicketDto> tickets = new ArrayList<>();
         TransferTicketDto tic = new TransferTicketDto("testUpdateErrNextSuccessNoErrInFirebase");

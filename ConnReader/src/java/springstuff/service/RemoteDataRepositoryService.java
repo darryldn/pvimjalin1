@@ -5,6 +5,7 @@
  */
 package springstuff.service;
 
+import id.dni.pvim.ext.net.RemoteMessagingResult;
 import id.dni.pvim.ext.net.TransferTicketDto;
 import java.util.List;
 import springstuff.exceptions.RemoteRepositoryException;
@@ -18,7 +19,7 @@ public interface RemoteDataRepositoryService {
     
     public void send(List<DeviceComponentStateJson> devices) throws RemoteRepositoryException;
     
-    public void sendTickets(List<TransferTicketDto> tickets) throws RemoteRepositoryException;
+    public List<RemoteMessagingResult> sendTickets(List<TransferTicketDto> tickets) throws RemoteRepositoryException;
     
     public void removeTickets(List<TransferTicketDto> tickets) throws RemoteRepositoryException;
     

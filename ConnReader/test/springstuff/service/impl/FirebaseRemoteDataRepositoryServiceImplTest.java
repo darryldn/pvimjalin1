@@ -87,11 +87,11 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
         inmem.init();
         
         FirebaseRemoteDataRepositoryServiceImpl impl = new FirebaseRemoteDataRepositoryServiceImpl();
-        impl.setFirebaseDB(fdb);
-        impl.setTicketsFirebaseDBPath("/tickets");
-        impl.setMachineStatusFirebaseDBPath("/ATMs");
-        impl.setTicketsNotifFirebaseDBPath("/list_atm_tickets");
-        impl.setRemoteTicketRepository(inmem);
+//        impl.setFirebaseDB(fdb);
+//        impl.setTicketsFirebaseDBPath("/tickets");
+//        impl.setMachineStatusFirebaseDBPath("/ATMs");
+//        impl.setTicketsNotifFirebaseDBPath("/list_atm_tickets");
+//        impl.setRemoteTicketRepository(inmem);
         
         FirebaseTicketDBListenerServiceImpl dblistener = new FirebaseTicketDBListenerServiceImpl();
         dblistener.setFirebaseDatabaseReferenceService(fdb);
@@ -204,9 +204,9 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
         inmem.init();
         
         FirebaseRemoteDataRepositoryServiceImpl impl = new FirebaseRemoteDataRepositoryServiceImpl();
-        impl.setFirebaseDB(fdb);
-        impl.setTicketsFirebaseDBPath("/tickets");
-        impl.setRemoteTicketRepository(inmem);
+//        impl.setFirebaseDB(fdb);
+//        impl.setTicketsFirebaseDBPath("/tickets");
+//        impl.setRemoteTicketRepository(inmem);
         
         DatabaseReference ref = fdb.getDatabaseReference("/tickets");
         
@@ -239,9 +239,9 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
         inmem.init();
         
         FirebaseRemoteDataRepositoryServiceImpl impl = new FirebaseRemoteDataRepositoryServiceImpl();
-        impl.setFirebaseDB(fdb);
-        impl.setTicketsFirebaseDBPath("/tickets");
-        impl.setRemoteTicketRepository(inmem);
+//        impl.setFirebaseDB(fdb);
+//        impl.setTicketsFirebaseDBPath("/tickets");
+//        impl.setRemoteTicketRepository(inmem);
         
         DatabaseReference ref = fdb.getDatabaseReference("/tickets");
         
@@ -279,8 +279,8 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
     @Test
     public void testPeriodicallySendUserData() throws Exception {
         FirebaseRemoteDataRepositoryServiceImpl impl = new FirebaseRemoteDataRepositoryServiceImpl();
-        impl.setFirebaseDB(fdb);
-        impl.setPvimSlmUserFirebaseDBPath("/users/pvim/slm");
+//        impl.setFirebaseDB(fdb);
+//        impl.setPvimSlmUserFirebaseDBPath("/users/pvim/slm");
         final List<SlmUserVo> list = new ArrayList<>();
         final Object lock = new Object();
         for (int i=0; i<10; ++i) {
@@ -368,8 +368,8 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
     @Test
     public void testPeriodicallySendUserDataWithNumericID() throws Exception {
         FirebaseRemoteDataRepositoryServiceImpl impl = new FirebaseRemoteDataRepositoryServiceImpl();
-        impl.setFirebaseDB(fdb);
-        impl.setPvimSlmUserFirebaseDBPath("/users/pvim/slm");
+//        impl.setFirebaseDB(fdb);
+//        impl.setPvimSlmUserFirebaseDBPath("/users/pvim/slm");
         final List<SlmUserVo> list = new ArrayList<>();
         final Object lock = new Object();
         for (int i=0; i<10; ++i) {
@@ -475,8 +475,8 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
         
         List<DeviceComponentStateJson> devices = new ArrayList<>();
         FirebaseRemoteDataRepositoryServiceImpl instance = new FirebaseRemoteDataRepositoryServiceImpl();
-        instance.setGpsFirebaseDBPath(locationPath);
-        instance.setMachineStatusFirebaseDBPath(atmPath);
+//        instance.setGpsFirebaseDBPath(locationPath);
+//        instance.setMachineStatusFirebaseDBPath(atmPath);
 //        instance.setAsyncRunnerService(new AsyncRunnerService() {
 //            @Override
 //            public void run(Runnable job) {
@@ -544,7 +544,7 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
             fail("Error, not managed to delete all leftover ATMs and locations");
         }
         
-        instance.setFirebaseDB(fdb);
+//        instance.setFirebaseDB(fdb);
         instance.send(devices);
         
         Thread.sleep(10000); // arbitrary
@@ -685,8 +685,8 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
         
         List<DeviceComponentStateJson> devices = new ArrayList<>();
         FirebaseRemoteDataRepositoryServiceImpl instance = new FirebaseRemoteDataRepositoryServiceImpl();
-        instance.setGpsFirebaseDBPath(locationPath);
-        instance.setMachineStatusFirebaseDBPath(atmPath);
+//        instance.setGpsFirebaseDBPath(locationPath);
+//        instance.setMachineStatusFirebaseDBPath(atmPath);
 //        instance.setAsyncRunnerService(new AsyncRunnerService() {
 //            @Override
 //            public void run(Runnable job) {
@@ -759,7 +759,7 @@ public class FirebaseRemoteDataRepositoryServiceImplTest {
             fail("Error, not managed to delete all leftover ATMs and locations");
         }
         
-        instance.setFirebaseDB(fdb);
+//        instance.setFirebaseDB(fdb);
         instance.send(devices);
         
         Thread.sleep(10000); // arbitrary

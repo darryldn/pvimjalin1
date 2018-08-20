@@ -11,11 +11,15 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.messaging.Message;
+import id.dni.ext.firebase.cloud.msg.json.FcmMessageDownstreamResponseJson;
+import id.dni.ext.firebase.cloud.msg.json.FcmMessageJson;
+import id.dni.ext.firebase.cloud.msg.json.FcmMessageNotificationJson;
 import id.dni.ext.prop.FirebaseUtil;
 import id.dni.ext.web.ws.obj.RestTicketDto;
+import id.dni.ext.web.ws.obj.SendTicketRemoteResponse;
 import id.dni.ext.web.ws.obj.firebase.FbTicketDto;
 import id.dni.pvim.ext.net.TransferTicketDto;
-import id.dni.pvim.ext.repo.db.ITicketRepository;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
 import java.util.HashMap;
 import java.util.List;
@@ -30,16 +34,30 @@ import org.springframework.stereotype.Service;
 import springstuff.exceptions.RemoteRepositoryException;
 import springstuff.json.DeviceComponentStateJson;
 import id.dni.ext.web.ws.obj.firebase.FbPvimSlmUserJson;
+import id.dni.pvim.ext.jmsmsg.JmsMsgConstants;
+import id.dni.pvim.ext.net.RemoteMessagingResult;
 import id.dni.pvim.ext.repo.db.ISlmUserRepository;
+import id.dni.pvim.ext.repo.db.ISlmUserTokenRepository;
 import id.dni.pvim.ext.repo.db.spec.impl.GetAllPvimUsersSpecification;
+import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByLoginNameSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByMobileSpecification;
+import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserTokenByIdSpecification;
+import id.dni.pvim.ext.repo.db.vo.SlmUserTokenVo;
 import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
+import id.dni.pvim.ext.telegram.commons.sender.MessageSender;
+import id.dni.pvim.ext.telegram.repo.ITelegramSuscribersRepository;
+import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
+import id.dni.pvim.ext.telegram.repo.spec.TelegramSubscribersListOfPhonesSpec;
 import id.dni.pvim.ext.web.in.Commons;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import springstuff.exceptions.RemoteWsException;
+import springstuff.service.AsyncRunnerService;
 import springstuff.service.RemoteDataRepositoryService;
-import springstuff.service.firebase.FirebaseDatabaseReferenceService;
-import springstuff.dao.IPvimTicketMonitorRepository;
+import springstuff.service.firebase.FirebaseCloudMessagingService;
 
 /**
  * This class assumes that PVIM webservice already works correctly. No need to
@@ -54,73 +72,73 @@ import springstuff.dao.IPvimTicketMonitorRepository;
 public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataRepositoryService {
 
     // firebase db reference
-    private FirebaseDatabaseReferenceService firebaseDB;
+//    private FirebaseDatabaseReferenceService firebaseDB;
     
 //    private ITicketRepository ticketRepository; // tiket repository in PVIM
     
     // repository to monitor whether pvim ticket webservice is error or not
-    private IPvimTicketMonitorRepository pvimTicketMonitorRepository; // ticket repository in firebase
+//    private IPvimTicketMonitorRepository pvimTicketMonitorRepository; // ticket repository in firebase
     
     // repository for SLM_USER table in pvim database
     private ISlmUserRepository pvimSlmUserRepository;
     
 //    private CacheService cacheService;
 
-    private String gpsFirebaseDBPath;
-    private String machineStatusFirebaseDBPath;
-    private String ticketsFirebaseDBPath;
-    private String pvimSlmUserFirebaseDBPath;
-    private String ticketsNotifFirebaseDBPath;
-    private String ticketChangedFirebaseDBPath;
+//    private String gpsFirebaseDBPath;
+//    private String machineStatusFirebaseDBPath;
+//    private String ticketsFirebaseDBPath;
+//    private String pvimSlmUserFirebaseDBPath;
+//    private String ticketsNotifFirebaseDBPath;
+//    private String ticketChangedFirebaseDBPath;
     
 //    private AsyncRunnerService asyncService;
     private int maxWaitTimeForQueryCompletion;
 
-    @Value("${firebase.database.geofire.root}")
-    public void setGpsFirebaseDBPath(String path) {
-        this.gpsFirebaseDBPath = path;
-    }
-
-    @Value("${firebase.database.machinestatus.root}")
-    public void setMachineStatusFirebaseDBPath(String path) {
-        this.machineStatusFirebaseDBPath = path;
-    }
-
-    @Value("${firebase.database.ticket.root}")
-    public void setTicketsFirebaseDBPath(String path) {
-        this.ticketsFirebaseDBPath = path;
-    }
+//    @Value("${firebase.database.geofire.root}")
+//    public void setGpsFirebaseDBPath(String path) {
+//        this.gpsFirebaseDBPath = path;
+//    }
+//
+//    @Value("${firebase.database.machinestatus.root}")
+//    public void setMachineStatusFirebaseDBPath(String path) {
+//        this.machineStatusFirebaseDBPath = path;
+//    }
+//
+//    @Value("${firebase.database.ticket.root}")
+//    public void setTicketsFirebaseDBPath(String path) {
+//        this.ticketsFirebaseDBPath = path;
+//    }
+//    
+//    @Value("${firebase.database.ticketnotiftrigger.root}")
+//    public void setTicketsNotifFirebaseDBPath(String path) {
+//        this.ticketsNotifFirebaseDBPath = path;
+//    }
+//    
+//    @Value("${firebase.database.slmuser.root}")
+//    public void setPvimSlmUserFirebaseDBPath(String path) {
+//        this.pvimSlmUserFirebaseDBPath = path;
+//    }
     
-    @Value("${firebase.database.ticketnotiftrigger.root}")
-    public void setTicketsNotifFirebaseDBPath(String path) {
-        this.ticketsNotifFirebaseDBPath = path;
-    }
-    
-    @Value("${firebase.database.slmuser.root}")
-    public void setPvimSlmUserFirebaseDBPath(String path) {
-        this.pvimSlmUserFirebaseDBPath = path;
-    }
-    
-    @Value("${firebase.database.ticketchangedtrigger.root}")
-    public void setTicketChangedFirebaseDBPath(String path) {
-        this.ticketChangedFirebaseDBPath = path;
-    }
+//    @Value("${firebase.database.ticketchangedtrigger.root}")
+//    public void setTicketChangedFirebaseDBPath(String path) {
+//        this.ticketChangedFirebaseDBPath = path;
+//    }
 
-    @Autowired
-    public void setRemoteTicketRepository(IPvimTicketMonitorRepository remote) {
-        this.pvimTicketMonitorRepository = remote;
-    }
+//    @Autowired
+//    public void setRemoteTicketRepository(IPvimTicketMonitorRepository remote) {
+//        this.pvimTicketMonitorRepository = remote;
+//    }
 
     // unused function
 //    @Autowired
-    public void setTicketRepository(ITicketRepository repo) {
-//        this.ticketRepository = repo;
-    }
+//    public void setTicketRepository(ITicketRepository repo) {
+////        this.ticketRepository = repo;
+//    }
 
-    @Autowired
-    public void setFirebaseDB(FirebaseDatabaseReferenceService db) {
-        this.firebaseDB = db;
-    }
+//    @Autowired
+//    public void setFirebaseDB(FirebaseDatabaseReferenceService db) {
+//        this.firebaseDB = db;
+//    }
     
     @Autowired
     public void setPvimSlmUserRepository(ISlmUserRepository repo) {
@@ -150,6 +168,34 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         } catch (NumberFormatException ex) {
             this.maxWaitTimeForQueryCompletion = 10000;
         }
+    }
+    
+    private FirebaseCloudMessagingService fcmService;
+    
+    @Autowired
+    public void setFirebaseCloudMessagingService(FirebaseCloudMessagingService s) {
+        this.fcmService = s;
+    }
+    
+    private ISlmUserTokenRepository userTokenRepo;
+    
+    @Autowired
+    public void setSlmUserTokenRepository(ISlmUserTokenRepository userTokenRepo) {
+        this.userTokenRepo = userTokenRepo;
+    }
+    
+    private ITelegramSuscribersRepository telegramRepos;
+    
+    @Autowired
+    public void setTelegramSubscribersRepository(ITelegramSuscribersRepository telegramRepos) {
+        this.telegramRepos = telegramRepos;
+    }
+    
+    private AsyncRunnerService async;
+    
+    @Autowired
+    public void setAsyncRunnerService(AsyncRunnerService service) {
+        this.async = service;
     }
 
     /**
@@ -471,17 +517,190 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
             this.timestamp = timestamp;
         }
     }
+    
+    
 
     @Override
-    public void sendTickets(final List<TransferTicketDto> tickets) throws RemoteRepositoryException {
+    public List<RemoteMessagingResult> sendTickets(final List<TransferTicketDto> tickets) throws RemoteRepositoryException {
         if (tickets == null || tickets.isEmpty()) {
-            return;
+            return Collections.EMPTY_LIST;
         }
         
+        Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                " - processing tickets: {0}", tickets.size());
+        
+        List<Future<RemoteMessagingResult>> asyncResults = new ArrayList<>();
+        for (TransferTicketDto rawTicket : tickets) {
+            Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                    " - processing ticket: {0}", rawTicket.getTicketId());
+            
+            try {
+                RestTicketDto rest = RestTicketDto.convert(rawTicket.getTicketMap());
+
+                // read context
+                String context = rawTicket.getContext();
+                List<SlmUserVo> contacts;
+
+                // if dispatch prefix, send to assigned user
+                if (context.startsWith(JmsMsgConstants.DISPATCH_PREFIX)) {
+                    contacts = this.pvimSlmUserRepository.query(new GetPvimUserByLoginNameSpecification(rest.getAssignee()));
+                    context = context.substring(JmsMsgConstants.DISPATCH_PREFIX.length());
+                    
+                } else {
+
+                    contacts = new ArrayList<>();
+                    // if not dispatch prefix, send to list of accounts
+                    for (String account : rawTicket.getAccountList()) {
+                        List<SlmUserVo> at = this.pvimSlmUserRepository.query(new GetPvimUserByMobileSpecification(account));
+                        contacts.addAll(at);
+                    }
+                }
+                
+                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                    " - context: {0}", context);
+                
+                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                    " - processing contacts: {0}", contacts.size());
+
+                // contents: context w/o prefix
+                for (SlmUserVo contact : contacts) {
+                    Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                            " - processing contact: {0}", contact.getLoginName());
+                    
+                    List<SlmUserTokenVo> tokenList = this.userTokenRepo.query(
+                            new GetPvimUserTokenByIdSpecification(contact.getUserID()));
+                    
+                    Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                            " - processing FCM Tokens: {0}", tokenList.size());
+                    
+                    for (SlmUserTokenVo token : tokenList) {
+                        Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                                " - processing token: {0}", token.getMessageToken());
+                        
+                        String to = token.getMessageToken();
+                        FcmMessageJson msg = new FcmMessageJson();
+                        msg.setTo(to);
+                        msg.setPriority("high");
+                        
+                        FcmMessageNotificationJson notif = new FcmMessageNotificationJson();
+                        notif.setTitle("PVIM Message");
+                        notif.setBody(context);
+                        msg.setNotification(notif);
+                        
+                        final SlmUserVo cc = contact;
+                        final String cx = context;
+                        
+                        Future<RemoteMessagingResult> doAsync = this.async.doAsync(new Callable<RemoteMessagingResult>() {
+                            @Override
+                            public RemoteMessagingResult call() throws Exception {
+                                try {
+                                    FcmMessageDownstreamResponseJson sendMessage = fcmService.sendMessage(msg);
+                                    if (sendMessage.getSuccess() == 1) {
+                                        return new RemoteMessagingResult(cc.getMobile(), 
+                                                sendMessage.getMulticast_id(), cx, JmsMsgConstants.S_OK, "FCM");
+                                    } else {
+                                        return new RemoteMessagingResult(cc.getMobile(), 
+                                                sendMessage.getMulticast_id(), cx, JmsMsgConstants.E_ERR, "FCM");
+                                    }
+                                } catch (Exception ex) {
+                                    Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+                                    return new RemoteMessagingResult(cc.getMobile(), 0, cx, JmsMsgConstants.E_ERR, "FCM");
+                                }
+                            }
+                        });
+                        asyncResults.add(doAsync);
+                    }
+                    
+                }
+                
+                List<String> realPhones = new ArrayList<>();
+                
+                for (SlmUserVo contact : contacts) {
+                    if (contact != null && !Commons.isEmptyStrIgnoreSpaces(contact.getMobile())) {
+                        realPhones.add(contact.getMobile());
+                    }
+                }
+                
+                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                    " - processing Telegram subscribers phones: {0}", realPhones);
+                
+                String[] phones = new String[realPhones.size()];
+                for (int i=0; i<phones.length; ++i) {
+                    phones[i] = realPhones.get(i);
+                }
+                
+                List<TelegramSubscriberVo> subs = this.telegramRepos.query(new TelegramSubscribersListOfPhonesSpec(phones));
+                
+                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                    " - processing Telegram subscribers: {0}", subs.size());
+                
+                final String fContext = context;
+                for (TelegramSubscriberVo sub : subs) {
+                    final TelegramSubscriberVo fsub = sub;
+                    
+                    Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO, 
+                            " - processing Telegram subscriber: {0}", sub);
+                    
+                    Future<RemoteMessagingResult> doAsync = this.async.doAsync(new Callable<RemoteMessagingResult>() {
+                        @Override
+                        public RemoteMessagingResult call() throws Exception {
+                            long chatID = fsub.getChat_id();
+                            String telegramContent = fContext;
+                            TelegramSubscriberVo finalSubs = fsub;
+                            
+                            try {
+                            
+                                boolean res = MessageSender.sendMessageAndSwallowLogs(fsub.getChat_id(), fContext);
+                                if (res) {
+                                    Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.INFO,
+                                            "Success sending message to chatID: {0} for message: {1} mobile: {2}", 
+                                            new Object[]{chatID, telegramContent, finalSubs.getPhone_num()});
+                                    return (new RemoteMessagingResult(finalSubs.getPhone_num(), chatID, telegramContent, JmsMsgConstants.S_OK, "telegram"));
+                                } else {
+                                    Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.WARNING,
+                                            "Error, cannot send message to chatID: {0} for message: {1} mobile: {2}", 
+                                            new Object[]{chatID, telegramContent, finalSubs.getPhone_num()});
+                                    return (new RemoteMessagingResult(finalSubs.getPhone_num(), chatID, telegramContent, JmsMsgConstants.E_ERR, "telegram"));
+                                }
+                            } catch (Exception ex) {
+                                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+                                    return (new RemoteMessagingResult(finalSubs.getPhone_num(), chatID, telegramContent, JmsMsgConstants.E_ERR, "telegram"));
+                            }
+                        }
+                    });
+                    asyncResults.add(doAsync);
+                }
+                
+                
+                
+            } catch (PvExtPersistenceException ex) {
+                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            } 
+            
+        }
+        
+        List<RemoteMessagingResult> fres = new ArrayList<>();
+        for (Future<RemoteMessagingResult> as : asyncResults) {
+            try {
+                RemoteMessagingResult res = as.get();
+                if (res != null) {
+                    fres.add(res);
+                } else {
+                    Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.WARNING, 
+                            " - found remote messaging result null. It means, some push notifications are not delivered to client");
+                }
+            } catch (InterruptedException | ExecutionException ex) {
+                Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        return fres;
+        
+        /*
         //final DatabaseReference ticketsDb = this.firebaseDB.getDatabaseReference(this.ticketsFirebaseDBPath);
         //final DatabaseReference atmDb = this.firebaseDB.getDatabaseReference(this.machineStatusFirebaseDBPath);
-        final DatabaseReference ticketNotifDb = this.firebaseDB.getDatabaseReference(this.ticketsNotifFirebaseDBPath);
-        final DatabaseReference ticketChangedDb = this.firebaseDB.getDatabaseReference(this.ticketChangedFirebaseDBPath);
+//        final DatabaseReference ticketNotifDb = this.firebaseDB.getDatabaseReference(this.ticketsNotifFirebaseDBPath);
+//        final DatabaseReference ticketChangedDb = this.firebaseDB.getDatabaseReference(this.ticketChangedFirebaseDBPath);
         
 //        final Map<String, Object> fbTickets = constructFbTickets(tickets);
         
@@ -579,6 +798,9 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         
 //        ticketsDb.updateChildren(fbTickets, new DumbFirebaseCompletionListener());
         ticketNotifDb.updateChildren(fbListAtmTicketsMap, new DumbFirebaseCompletionListener());
+        
+        
+        
 
         Map<String, Object> fbTicketsChanged = new HashMap<>();
         for (Map.Entry<String, List<TicketPair>> e : ticketsChanged.entrySet()) {
@@ -600,7 +822,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         
         ticketChangedDb.updateChildren(fbTicketsChanged, new DumbFirebaseCompletionListener());
         
-        
+        */
     }
     
     @Override

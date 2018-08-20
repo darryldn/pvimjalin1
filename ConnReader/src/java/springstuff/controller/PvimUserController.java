@@ -9,9 +9,13 @@ import com.google.gson.Gson;
 import id.dni.ext.web.Util;
 import id.dni.ext.web.ws.obj.firebase.FbPvimSlmUserJson;
 import id.dni.pvim.ext.err.PVIMErrorCodes;
+import id.dni.pvim.ext.repo.db.vo.SlmUserTokenVo;
 import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
 import id.dni.pvim.ext.web.in.OperationError;
 import id.dni.pvim.ext.web.in.PVIMAuthToken;
+import id.dni.pvim.ext.web.in.PVIMUserTokenRequest;
+import id.dni.pvim.ext.web.in.PVIMUserTokenResponse;
+import id.dni.pvim.ext.web.in.UserToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +43,100 @@ public class PvimUserController {
         this.userService = userService;
     }
     
+    @RequestMapping(value = "/pvim/user/token/set", method = RequestMethod.POST, 
+            produces = MediaType.APPLICATION_JSON_VALUE, 
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<String> setUserToken(@RequestBody String userTokenJson) {
+        
+        Gson gson = new Gson();
+        PVIMUserTokenRequest request = gson.fromJson(userTokenJson, PVIMUserTokenRequest.class);
+        PVIMUserTokenResponse resp = new PVIMUserTokenResponse();
+        
+        PVIMAuthToken auth = request.getAuth();
+        
+        if (auth == null) {
+            // DIE!
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("No authentication token given");
+            resp.setErr(err);
+            return Util.returnJson(resp);
+        }
+        
+        SlmUserVo authUser = userService.checkUser(auth);
+        
+        if (authUser == null) {
+            // DIE!
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("Username / password error");
+            resp.setErr(err);
+            return Util.returnJson(resp);
+        }
+        
+        UserToken requestToken = request.getToken();
+        SlmUserTokenVo dbToken = this.userService.setOrUpdateUserToken(requestToken);
+        
+        if (dbToken == null) {
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_DATABASE_ERROR);
+            err.setErrMsg("Database error, please contact administrator");
+            resp.setErr(err);
+            return Util.returnJson(resp);
+        }
+        
+        resp.setToken(requestToken);
+        return Util.returnJson(resp);
+    }
+    
+    @RequestMapping(value = "/pvim/user/token/delete", method = RequestMethod.POST, 
+            produces = MediaType.APPLICATION_JSON_VALUE, 
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<String> deleteUserToken(@RequestBody String userTokenJson) {
+        
+        Gson gson = new Gson();
+        PVIMUserTokenRequest request = gson.fromJson(userTokenJson, PVIMUserTokenRequest.class);
+        PVIMUserTokenResponse resp = new PVIMUserTokenResponse();
+        
+        PVIMAuthToken auth = request.getAuth();
+        
+        if (auth == null) {
+            // DIE!
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("No authentication token given");
+            resp.setErr(err);
+            return Util.returnJson(resp);
+        }
+        
+        SlmUserVo authUser = userService.checkUser(auth);
+        
+        if (authUser == null) {
+            // DIE!
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("Username / password error");
+            resp.setErr(err);
+            return Util.returnJson(resp);
+        }
+        
+        UserToken requestToken = request.getToken();
+        SlmUserTokenVo dbToken = this.userService.deleteUserToken(requestToken);
+        
+        if (dbToken == null) {
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_DATABASE_ERROR);
+            err.setErrMsg("Database error, please contact administrator");
+            resp.setErr(err);
+            return Util.returnJson(resp);
+        }
+        
+        resp.setToken(requestToken);
+        return Util.returnJson(resp);
+    }
+    
     @RequestMapping(value = "/pvim/user/get", method = RequestMethod.POST, 
             produces = MediaType.APPLICATION_JSON_VALUE, 
             consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -59,12 +157,13 @@ public class PvimUserController {
             return Util.returnJson(resp);
         }
         
-        // bypass the user/password for now
-        SlmUserVo authUser = userService.checkUser(auth.getUsername(), auth.getPassword());
+        SlmUserVo authUser = userService.checkUser(auth);
+        
         if (authUser == null) {
+            // DIE!
             OperationError err = new OperationError();
-            err.setErrCode("" + PVIMErrorCodes.E_CONFIG);
-            err.setErrMsg("Username or password wrong");
+            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("Username / password error");
             resp.setErr(err);
             return Util.returnJson(resp);
         }

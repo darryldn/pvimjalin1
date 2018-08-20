@@ -10,6 +10,9 @@ import com.wn.econnect.inbound.wsi.ticket.PvimWSException;
 import id.dni.ext.web.Util;
 import id.dni.ext.web.ws.obj.RestTicketDto;
 import id.dni.ext.web.ws.obj.SendTicketRemoteResponse;
+import id.dni.pvim.ext.err.PVIMErrorCodes;
+import id.dni.pvim.ext.net.RemoteMessagingResult;
+import id.dni.pvim.ext.net.SendTicketRemoteResponseJson;
 import id.dni.pvim.ext.net.TransferTicketDto;
 import id.dni.pvim.ext.web.in.OperationError;
 import java.util.ArrayList;
@@ -69,21 +72,26 @@ public class TicketController {
         List<TransferTicketDto> tickets = new ArrayList<>();
         tickets.add(transferDto);
         
-        SendTicketRemoteResponse resp = new SendTicketRemoteResponse();
+//        SendTicketRemoteResponse resp = new SendTicketRemoteResponse();
+        SendTicketRemoteResponseJson respNew = new SendTicketRemoteResponseJson();
+        
         try {
-            this.remoteDataRepositoryService.sendTickets(tickets);
-            resp.setTicket(RestTicketDto.convert(transferDto.getTicketMap()));
+            List<RemoteMessagingResult> sendTickets = this.remoteDataRepositoryService.sendTickets(tickets);
+            respNew.setResult(sendTickets);
+            
+//            resp.setTicket(RestTicketDto.convert(transferDto.getTicketMap()));
         } catch (RemoteRepositoryException ex) {
             Logger.getLogger(TicketController.class.getName()).log(Level.SEVERE, null, ex);
             OperationError err = new OperationError();
-            err.setErrCode("-20000");
+            err.setErrCode("" + PVIMErrorCodes.E_UNKNOWN_ERROR);
             err.setErrMsg("Unable to send request to Remote server");
-            resp.setErr(err);
+//            resp.setErr(err);
+            respNew.setErr(err);
         }
         
         String jsonret = null;
         try {
-            jsonret = gson.toJson(resp);
+            jsonret = gson.toJson(respNew);
             return Util.returnJsonStr(jsonret);
         } finally {
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "<< sendTicketRemote {0}", jsonret);
