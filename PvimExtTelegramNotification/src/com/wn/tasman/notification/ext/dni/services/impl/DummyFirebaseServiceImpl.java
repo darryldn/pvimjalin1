@@ -7,8 +7,11 @@ package com.wn.tasman.notification.ext.dni.services.impl;
 
 import com.google.gson.Gson;
 import com.wn.tasman.notification.ext.dni.services.FirebaseService;
+import id.dni.pvim.ext.err.PVIMErrorCodes;
+import id.dni.pvim.ext.net.SendTicketRemoteResponseJson;
 import id.dni.pvim.ext.net.TransferTicketDto;
 import id.dni.pvim.ext.web.in.Commons;
+import id.dni.pvim.ext.web.in.OperationError;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -65,7 +68,7 @@ public class DummyFirebaseServiceImpl implements FirebaseService {
      * @param ticketMap
      * @param url 
      */
-    private void sendRemote(TransferTicketDto ticketMap, String url) {
+    private SendTicketRemoteResponseJson sendRemote(TransferTicketDto ticketMap, String url) {
         try {
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "ticket: {0}", ticketMap);
             
@@ -75,11 +78,18 @@ public class DummyFirebaseServiceImpl implements FirebaseService {
             String jsonData = gson.toJson(ticketMap);
             String returnData = Commons.postJsonRequest(strUrl, timeout, jsonData);
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "obtained: {0}", returnData);
+            SendTicketRemoteResponseJson returned = gson.fromJson(returnData, SendTicketRemoteResponseJson.class);
+            return returned;
             
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(DummyFirebaseServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DummyFirebaseServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+            SendTicketRemoteResponseJson returned = new SendTicketRemoteResponseJson();
+            OperationError err = new OperationError();
+            err.setErrCode("" + PVIMErrorCodes.E_NET);
+            err.setErrMsg(ex.getMessage());
+            returned.setErr(err);
+            return returned;
+            
         }
     }
     
@@ -93,6 +103,11 @@ public class DummyFirebaseServiceImpl implements FirebaseService {
     @Async
     public void remove(TransferTicketDto ticketMap) {
         sendRemote(ticketMap, this.prop.getProperty("firebase.workaround.url.removeticket"));
+    }
+
+    @Override
+    public SendTicketRemoteResponseJson sendSync(TransferTicketDto ticketMap) {
+        return sendRemote(ticketMap, this.prop.getProperty("firebase.workaround.url"));
     }
     
 }

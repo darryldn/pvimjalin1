@@ -5,6 +5,7 @@
  */
 package com.wn.tasman.notification.ext.dni.services;
 
+import id.dni.pvim.ext.net.SendTicketRemoteResponseJson;
 import id.dni.pvim.ext.net.TransferTicketDto;
 
 /**
@@ -16,5 +17,7 @@ public interface FirebaseService {
     public void send(TransferTicketDto ticketMap);
     
     public void remove(TransferTicketDto ticketMap);
+    
+    public SendTicketRemoteResponseJson sendSync(TransferTicketDto ticketMap);
     
 }

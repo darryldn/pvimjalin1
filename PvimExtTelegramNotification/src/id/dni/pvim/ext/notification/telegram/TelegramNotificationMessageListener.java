@@ -17,32 +17,21 @@ import com.wn.tasman.ticket.domain.NotificationRecord;
 import com.wn.tasman.ticket.domain.Ticket;
 import com.wn.tasman.ticket.domain.TicketRecord;
 import com.wn.tasman.user.dao.UserDao;
-import com.wn.tasman.user.domain.User;
 import com.wn.tasman.util.NotificationRecordHelper;
 import com.wn.tasman.util.SLMUtil;
-import id.dni.pvim.ext.db.config.PVIMDBConnectionFactory;
-import id.dni.pvim.ext.db.trx.IProViewTrx;
+import id.dni.pvim.ext.net.RemoteMessagingResult;
+import id.dni.pvim.ext.net.SendTicketRemoteResponseJson;
 import id.dni.pvim.ext.net.TransferTicketDto;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
-import id.dni.pvim.ext.telegram.commons.config.TelegramConfig;
-import id.dni.pvim.ext.telegram.commons.sender.MessageSender;
-import id.dni.pvim.ext.telegram.repo.ITelegramSuscribersRepository;
-import id.dni.pvim.ext.telegram.repo.TelegramRepositoryFactory;
-import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
-import id.dni.pvim.ext.telegram.repo.spec.TelegramSubscribersListOfPhonesSpec;
 import id.dni.pvim.ext.web.in.Commons;
 import java.sql.SQLException;
 import java.util.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
@@ -81,8 +70,8 @@ public class TelegramNotificationMessageListener implements MessageListener {
     private TicketManager ticketManager;
     private UserDao userDao;
     private HibernateTemplate pvimHibernateTemplate;
-    private static final String DISPATCH_PREFIX = "dispatch:";
-    private ITelegramSuscribersRepository gSubscriberRepos = null;
+//    private static final String DISPATCH_PREFIX = "dispatch:";
+//    private ITelegramSuscribersRepository gSubscriberRepos = null;
     private static final int S_OK = 0, E_ERR = -1;
 
     public TelegramNotificationMessageListener() {
@@ -106,9 +95,9 @@ public class TelegramNotificationMessageListener implements MessageListener {
         this.systemVariableManager = systemVariableManager;
     }
 
-    void setSubscriberRepository(ITelegramSuscribersRepository repo) {
-        this.gSubscriberRepos = repo;
-    }
+//    void setSubscriberRepository(ITelegramSuscribersRepository repo) {
+//        this.gSubscriberRepos = repo;
+//    }
 
     public Ticket getTicket(String ticketId)
             throws InterruptedException {
@@ -152,9 +141,9 @@ public class TelegramNotificationMessageListener implements MessageListener {
      * @return
      * @throws PvExtPersistenceException 
      */
-    private List<TelegramSubscriberVo> getSubscribers(String mobile) throws PvExtPersistenceException {
-        return getSubscribers(new String[]{mobile});
-    }
+//    private List<TelegramSubscriberVo> getSubscribers(String mobile) throws PvExtPersistenceException {
+//        return getSubscribers(new String[]{mobile});
+//    }
 
     /**
      * Function to get list of telegram subscribers from list of mobile phone numbers
@@ -162,43 +151,43 @@ public class TelegramNotificationMessageListener implements MessageListener {
      * @return
      * @throws PvExtPersistenceException 
      */
-    private List<TelegramSubscriberVo> getSubscribers(String[] mobile) throws PvExtPersistenceException {
-        // since table PVIM_EXT_TELEGRAM_SUBSCRIBER is not mapped to Hibernate, 
-        // pvimHibernateTemplate cannot be used here
-        
-        IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
-        try {
-            pvimTx.begin();
-
-            Object conn = pvimTx.getTrxConnection();
-            ITelegramSuscribersRepository subscriberRepos;
-
-            // allows for overriding implementation of subscriberRepository.
-            // useful for unit testing
-            if (gSubscriberRepos != null) {
-                subscriberRepos = gSubscriberRepos;
-            } else {
-                subscriberRepos = TelegramRepositoryFactory.getInstance().getTelegramSubscribersRepository(conn);
-            }
-
-            List<TelegramSubscriberVo> subscribers = subscriberRepos.query(
-                    new TelegramSubscribersListOfPhonesSpec(mobile));
-            pvimTx.commit();
-            return subscribers;
-
-        } catch (PvExtPersistenceException ex) {
-            pvimTx.rollback();
-            throw ex;
-
-        } catch (Exception ex) {
-            pvimTx.rollback();
-            throw new PvExtPersistenceException(ex);
-
-        } finally {
-            pvimTx.close();
-
-        }
-    }
+//    private List<TelegramSubscriberVo> getSubscribers(String[] mobile) throws PvExtPersistenceException {
+//        // since table PVIM_EXT_TELEGRAM_SUBSCRIBER is not mapped to Hibernate, 
+//        // pvimHibernateTemplate cannot be used here
+//        
+//        IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
+//        try {
+//            pvimTx.begin();
+//
+//            Object conn = pvimTx.getTrxConnection();
+//            ITelegramSuscribersRepository subscriberRepos;
+//
+//            // allows for overriding implementation of subscriberRepository.
+//            // useful for unit testing
+//            if (gSubscriberRepos != null) {
+//                subscriberRepos = gSubscriberRepos;
+//            } else {
+//                subscriberRepos = TelegramRepositoryFactory.getInstance().getTelegramSubscribersRepository(conn);
+//            }
+//
+//            List<TelegramSubscriberVo> subscribers = subscriberRepos.query(
+//                    new TelegramSubscribersListOfPhonesSpec(mobile));
+//            pvimTx.commit();
+//            return subscribers;
+//
+//        } catch (PvExtPersistenceException ex) {
+//            pvimTx.rollback();
+//            throw ex;
+//
+//        } catch (Exception ex) {
+//            pvimTx.rollback();
+//            throw new PvExtPersistenceException(ex);
+//
+//        } finally {
+//            pvimTx.close();
+//
+//        }
+//    }
 
     /**
      * Convenience function to create notification record POJO.
@@ -213,93 +202,93 @@ public class TelegramNotificationMessageListener implements MessageListener {
      * @param ticketId
      * @return 
      */
-    private NotificationRecord createNotificationRecord(String receiver, String context, String ticketId) {
-        NotificationRecord nr = new NotificationRecord(null, "telegram", new Timestamp(new Date().getTime()), "0", null);
-        nr.setReceiver(receiver);
-        if (context.length() > 2500) {
-            context = context.substring(0, 2500);
-        }
-        nr.setContent(context);
-        if (ticketId != null) {
-            nr.setTicket(ticketId);
-        }
-        return nr;
-    }
+//    private NotificationRecord createNotificationRecord(String receiver, String context, String ticketId) {
+//        NotificationRecord nr = new NotificationRecord(null, "telegram", new Timestamp(new Date().getTime()), "0", null);
+//        nr.setReceiver(receiver);
+//        if (context.length() > 2500) {
+//            context = context.substring(0, 2500);
+//        }
+//        nr.setContent(context);
+//        if (ticketId != null) {
+//            nr.setTicket(ticketId);
+//        }
+//        return nr;
+//    }
 
-    private static class ResultHolder {
-        Future<TelegramRequestResult> future;
-        TelegramSubscriberVo subscriber;
-    }
+//    private static class ResultHolder {
+//        Future<TelegramRequestResult> future;
+//        TelegramSubscriberVo subscriber;
+//    }
 
-    List<TelegramRequestResult> dispatchTicketToSubscribers(List<TelegramSubscriberVo> subscribers, String messageContent) {
-        logger.logInfo("Start Enumerating subscribers: ");
+//    private List<TelegramRequestResult> dispatchTicketToSubscribers(List<TelegramSubscriberVo> subscribers, String messageContent) {
+//        logger.logInfo("Start Enumerating subscribers: ");
+//
+//        List<ResultHolder> futures = new ArrayList<>();
+//        final String telegramContent = messageContent;
+//
+//        for (TelegramSubscriberVo subscriber : subscribers) {
+//            logger.logInfo("Subscriber id: " + subscriber.getSubs_id());
+//
+//            final long chatID = subscriber.getChat_id();
+//            logger.logInfo("chatID: " + chatID);
+//
+//            final TelegramSubscriberVo finalSubs = subscriber;
+//            ResultHolder rh = new ResultHolder();
+//            rh.subscriber = subscriber;
+//            rh.future = this.asyncSenderService.doAsync(new Callable<TelegramRequestResult>() {
+//                @Override
+//                public TelegramRequestResult call() throws Exception {
+//                    if (MessageSender.sendMessageAndSwallowLogs(chatID, telegramContent)) {
+//                        logger.logInfo("Success sending message to chatID: "
+//                                + chatID + " for message: " + telegramContent + " mobile: " + finalSubs.getPhone_num());
+//                        return (new TelegramRequestResult(finalSubs.getPhone_num(), chatID, telegramContent, S_OK));
+//                    } else {
+//                        logger.logError("Error, cannot send message to chatID: "
+//                                + chatID + " for message: " + telegramContent + " mobile: " + finalSubs.getPhone_num());
+//                        return (new TelegramRequestResult(finalSubs.getPhone_num(), chatID, telegramContent, E_ERR));
+//                    }
+//                }
+//            });
+//            futures.add(rh);
+//        }
+//
+//        List<TelegramRequestResult> result = new ArrayList<>();
+//        for (ResultHolder requestHolder : futures) {
+//            TelegramSubscriberVo subscriber = requestHolder.subscriber;
+//            Future<TelegramRequestResult> future = requestHolder.future;
+//
+//            TelegramRequestResult req;
+//            try {
+//                req = future.get();
+//            } catch (InterruptedException | ExecutionException ex) {
+//                this.logger.logError(ex);
+//                req = null;
+//            }
+//
+//            if (req == null) { // if throw exception in doAsync, it returns null.
+//                req = (new TelegramRequestResult(subscriber.getPhone_num(), subscriber.getChat_id(), telegramContent, E_ERR));
+//            }
+//
+//            result.add(req);
+//        }
+//
+//        return result;
+//    }
 
-        List<ResultHolder> futures = new ArrayList<>();
-        final String telegramContent = messageContent;
-
-        for (TelegramSubscriberVo subscriber : subscribers) {
-            logger.logInfo("Subscriber id: " + subscriber.getSubs_id());
-
-            final long chatID = subscriber.getChat_id();
-            logger.logInfo("chatID: " + chatID);
-
-            final TelegramSubscriberVo finalSubs = subscriber;
-            ResultHolder rh = new ResultHolder();
-            rh.subscriber = subscriber;
-            rh.future = this.asyncSenderService.doAsync(new Callable<TelegramRequestResult>() {
-                @Override
-                public TelegramRequestResult call() throws Exception {
-                    if (MessageSender.sendMessageAndSwallowLogs(chatID, telegramContent)) {
-                        logger.logInfo("Success sending message to chatID: "
-                                + chatID + " for message: " + telegramContent + " mobile: " + finalSubs.getPhone_num());
-                        return (new TelegramRequestResult(finalSubs.getPhone_num(), chatID, telegramContent, S_OK));
-                    } else {
-                        logger.logError("Error, cannot send message to chatID: "
-                                + chatID + " for message: " + telegramContent + " mobile: " + finalSubs.getPhone_num());
-                        return (new TelegramRequestResult(finalSubs.getPhone_num(), chatID, telegramContent, E_ERR));
-                    }
-                }
-            });
-            futures.add(rh);
-        }
-
-        List<TelegramRequestResult> result = new ArrayList<>();
-        for (ResultHolder requestHolder : futures) {
-            TelegramSubscriberVo subscriber = requestHolder.subscriber;
-            Future<TelegramRequestResult> future = requestHolder.future;
-
-            TelegramRequestResult req;
-            try {
-                req = future.get();
-            } catch (InterruptedException | ExecutionException ex) {
-                this.logger.logError(ex);
-                req = null;
-            }
-
-            if (req == null) { // if throw exception in doAsync, it returns null.
-                req = (new TelegramRequestResult(subscriber.getPhone_num(), subscriber.getChat_id(), telegramContent, E_ERR));
-            }
-
-            result.add(req);
-        }
-
-        return result;
-    }
-
-    private String getTelegramMessage(String ticketNumber, String messageContent) {
-        String telegramContent;
-
-        if (Commons.isEmptyStrIgnoreSpaces(messageContent)) {
-            String deeplink = TelegramConfig.getDeeplinkPrefix();
-            telegramContent = deeplink + ticketNumber;
-            logger.logError("No messageContent sent, default to telegram deeplink: " + telegramContent);
-
-        } else {
-            telegramContent = messageContent;
-
-        }
-        return telegramContent;
-    }
+//    private String getTelegramMessage(String ticketNumber, String messageContent) {
+//        String telegramContent;
+//
+//        if (Commons.isEmptyStrIgnoreSpaces(messageContent)) {
+//            String deeplink = TelegramConfig.getDeeplinkPrefix();
+//            telegramContent = deeplink + ticketNumber;
+//            logger.logError("No messageContent sent, default to telegram deeplink: " + telegramContent);
+//
+//        } else {
+//            telegramContent = messageContent;
+//
+//        }
+//        return telegramContent;
+//    }
 
     // just a holder class to hold note and timestamp;
     // in order to sort the note on timestamp desc, latest note will be shown first.
@@ -350,13 +339,20 @@ public class TelegramNotificationMessageListener implements MessageListener {
      * @param ticketId
      * @param statusId 
      */
-    private void sendToFirebase(final String ticketId, final String statusId, final List<String> accounts) {
+    private void sendToFirebase(final String ticketId, final String statusId, 
+            final List<String> accounts, final String context) {
         if (this.firebaseService != null) {
             if (this.pvimHibernateTemplate != null) {
                 this.pvimHibernateTemplate.execute(new HibernateCallback() {
                     @Override
                     public Void doInHibernate(org.hibernate.Session session)
                             throws org.hibernate.HibernateException, SQLException {
+                        
+                        StringBuilder accountStrSb = new StringBuilder();
+                        for (String a : accounts) {
+                            accountStrSb.append(a).append(",");
+                        }
+                        String accountStr = accountStrSb.toString();
                         
                         // in order to fully utilize the hibernate, one should re-obtain
                         // the objects via hibernate session.
@@ -401,14 +397,29 @@ public class TelegramNotificationMessageListener implements MessageListener {
                             trs.setLastupdated(lastupdated);
                             trs.setTicketMap(ticketMap);
                             trs.setAccountList(accounts);
+                            trs.setContext(context);
                             
-                            if ("7".equals(statusId)) { // ticket in Deleted state
-                                firebaseService.remove(trs);
+                            SendTicketRemoteResponseJson sendSync = firebaseService.sendSync(trs);
+                            if (sendSync.getErr() != null) {
+                                createFatalNotificationRecord(accountStr, context, ticketId, statusId);
                             } else {
-                                firebaseService.send(trs);
+                                List<RemoteMessagingResult> rl = sendSync.getResult();
+                                if (rl == null) {
+                                    rl = Collections.EMPTY_LIST;
+                                }
+                                for (RemoteMessagingResult result : rl) {
+                                    createNotificationRecordOnResult(ticketId, statusId, result);
+                                }
                             }
+                            
+//                            if ("7".equals(statusId)) { // ticket in Deleted state
+//                                firebaseService.remove(trs);
+//                            } else {
+//                                firebaseService.send(trs);
+//                            }
                         } else {
                             logger.logError("Unable to obtain ticket after delay!");
+                            createFatalNotificationRecord(accountStr, context, ticketId, statusId);
                         }
 
                         return null;
@@ -432,32 +443,32 @@ public class TelegramNotificationMessageListener implements MessageListener {
      * @return
      * @throws PvExtPersistenceException 
      */
-    private List<TelegramRequestResult> dispatchTicket(Ticket ticket, String messageContent) throws PvExtPersistenceException {
-        String userid = ticket.getSlmUserByAssigneeId().getUserId();
-        logger.logInfo("Assigned userID = " + userid);
-
-//        String ticketNumber = ticket.getTicketNum();
-        User safe_user = this.userDao.getUser(userid);
-        String mobile = safe_user.getMobile();
-
-        if (Commons.isEmptyStrIgnoreSpaces(mobile)) {
-            this.logger.logError("User with id " + userid + " has no mobile number registered!");
-            List<TelegramRequestResult> rsa = new ArrayList<>();
-            TelegramRequestResult res = new TelegramRequestResult("userid:" + userid, 0, messageContent, E_ERR);
-            res.setReceiverName(safe_user.getName());
-            rsa.add(res);
-            return rsa;
-        }
-
-        return sendToSpecifiedAccountsWithoutDispatch(ticket, new String[]{mobile}, messageContent);
-
-//        logger.logInfo("ticketNumber = " + ticketNumber + " mobile = " + mobile);
-//        List<TelegramSubscriberVo> subscribers = getSubscribers(mobile);
-//        
-//        logger.logInfo("Start Enumerating subscribers: ");
-//        String telegramContent = getTelegramMessage(ticketNumber, messageContent);
-//        dispatchTicketToSubscribers(subscribers, telegramContent);
-    }
+//    private List<TelegramRequestResult> dispatchTicket(Ticket ticket, String messageContent) throws PvExtPersistenceException {
+//        String userid = ticket.getSlmUserByAssigneeId().getUserId();
+//        logger.logInfo("Assigned userID = " + userid);
+//
+////        String ticketNumber = ticket.getTicketNum();
+//        User safe_user = this.userDao.getUser(userid);
+//        String mobile = safe_user.getMobile();
+//
+//        if (Commons.isEmptyStrIgnoreSpaces(mobile)) {
+//            this.logger.logError("User with id " + userid + " has no mobile number registered!");
+//            List<TelegramRequestResult> rsa = new ArrayList<>();
+//            TelegramRequestResult res = new TelegramRequestResult("userid:" + userid, 0, messageContent, E_ERR);
+//            res.setReceiverName(safe_user.getName());
+//            rsa.add(res);
+//            return rsa;
+//        }
+//
+//        return sendToSpecifiedAccountsWithoutDispatch(ticket, new String[]{mobile}, messageContent);
+//
+////        logger.logInfo("ticketNumber = " + ticketNumber + " mobile = " + mobile);
+////        List<TelegramSubscriberVo> subscribers = getSubscribers(mobile);
+////        
+////        logger.logInfo("Start Enumerating subscribers: ");
+////        String telegramContent = getTelegramMessage(ticketNumber, messageContent);
+////        dispatchTicketToSubscribers(subscribers, telegramContent);
+//    }
 
     /**
      * Send ticket to specified accounts
@@ -467,42 +478,42 @@ public class TelegramNotificationMessageListener implements MessageListener {
      * @return
      * @throws PvExtPersistenceException 
      */
-    private List<TelegramRequestResult> sendToSpecifiedAccountsWithoutDispatch(Ticket ticket, String[] accounts, String messageContent)
-            throws PvExtPersistenceException {
-
-        if (accounts.length == 0) {
-            this.logger.logError("Error sending message. No target accounts selected");
-            return Collections.EMPTY_LIST;
-        }
-
-        String ticketNumber = ticket.getTicketNum();
-        List<TelegramSubscriberVo> subs = getSubscribers(accounts);
-
-        Set<String> subsPhones = new HashSet<>();
-        for (TelegramSubscriberVo sub : subs) {
-            subsPhones.add(sub.getPhone_num());
-        }
-
-        List<TelegramRequestResult> errUsers = new ArrayList<>();
-        for (String account : accounts) {
-            if (Commons.isEmptyStrIgnoreSpaces(account)) {
-                TelegramRequestResult res = new TelegramRequestResult("N/A", 0, messageContent, E_ERR);
-                this.logger.logError("Error sending message. No mobile number registered.");
-                errUsers.add(res);
-
-            } else if (!subsPhones.contains(account)) {
-                // found unregistered user! Must record it as failure!
-                TelegramRequestResult res = new TelegramRequestResult(account, 0, messageContent, E_ERR);
-                this.logger.logError("Error sending message. Mobile number " + account + " has not subscribed to telegram bot!");
-                errUsers.add(res);
-            }
-        }
-
-        String telegramContent = getTelegramMessage(ticketNumber, messageContent);
-        List<TelegramRequestResult> result = dispatchTicketToSubscribers(subs, telegramContent);
-        result.addAll(errUsers);
-        return result;
-    }
+//    private List<TelegramRequestResult> sendToSpecifiedAccountsWithoutDispatch(Ticket ticket, String[] accounts, String messageContent)
+//            throws PvExtPersistenceException {
+//
+//        if (accounts.length == 0) {
+//            this.logger.logError("Error sending message. No target accounts selected");
+//            return Collections.EMPTY_LIST;
+//        }
+//
+//        String ticketNumber = ticket.getTicketNum();
+//        List<TelegramSubscriberVo> subs = getSubscribers(accounts);
+//
+//        Set<String> subsPhones = new HashSet<>();
+//        for (TelegramSubscriberVo sub : subs) {
+//            subsPhones.add(sub.getPhone_num());
+//        }
+//
+//        List<TelegramRequestResult> errUsers = new ArrayList<>();
+//        for (String account : accounts) {
+//            if (Commons.isEmptyStrIgnoreSpaces(account)) {
+//                TelegramRequestResult res = new TelegramRequestResult("N/A", 0, messageContent, E_ERR);
+//                this.logger.logError("Error sending message. No mobile number registered.");
+//                errUsers.add(res);
+//
+//            } else if (!subsPhones.contains(account)) {
+//                // found unregistered user! Must record it as failure!
+//                TelegramRequestResult res = new TelegramRequestResult(account, 0, messageContent, E_ERR);
+//                this.logger.logError("Error sending message. Mobile number " + account + " has not subscribed to telegram bot!");
+//                errUsers.add(res);
+//            }
+//        }
+//
+//        String telegramContent = getTelegramMessage(ticketNumber, messageContent);
+//        List<TelegramRequestResult> result = dispatchTicketToSubscribers(subs, telegramContent);
+//        result.addAll(errUsers);
+//        return result;
+//    }
     
     private List<String> extractAccounts(String accounts) {
         String[] listAccounts = accounts.split(",");
@@ -513,6 +524,48 @@ public class TelegramNotificationMessageListener implements MessageListener {
             }
         }
         return trimmedAccounts;
+    }
+    
+    private void createFatalNotificationRecord(String accounts, String context, String ticketId, String statusId) {
+        logger.logInfo("Notification error, record the failure");
+        NotificationRecord nr = new NotificationRecord(null, "tlg-FCM", new Timestamp(new Date().getTime()), "0", null);
+        nr.setReceiver(accounts);
+        nr.setContent(context);
+        if (ticketId != null) {
+            nr.setTicket(ticketId);
+        }
+
+        // taken from EmailMessageListener class
+        nr.setSucFlag("0");
+        this.notificationManagerDAO.createNotificationRecord(nr);
+        NotificationRecordHelper helper = NotificationRecordHelper.getInstance();
+        helper.recordNotificationToHistory(nr, statusId);
+    }
+    
+    private void createNotificationRecordOnResult(String ticketId, String statusId, RemoteMessagingResult rr) {
+        NotificationRecord nr2 = new NotificationRecord(null,
+                rr.getSource(), new Timestamp(rr.getDate()), "0", null);
+
+        nr2.setReceiver(rr.getMobile());
+        nr2.setContent(rr.getMessage());
+        if (ticketId != null) {
+            nr2.setTicket(ticketId);
+        }
+//                            nr2.setReceiverName(ticketId);
+
+        // from default Sms listener
+        if (rr.getStatus() == S_OK) {
+            nr2.setSucFlag("1");
+        } else {
+            nr2.setSucFlag("2");
+        }
+
+        if (rr.getReceiverName() != null) {
+            nr2.setReceiverName(rr.getReceiverName());
+        }
+
+        this.notificationManagerDAO.createNotificationRecord(nr2);
+        NotificationRecordHelper.getInstance().recordNotificationToHistory(nr2, statusId);
     }
 
     @Override
@@ -565,7 +618,7 @@ public class TelegramNotificationMessageListener implements MessageListener {
                     List<String> trimmedAccounts = extractAccounts(accounts);
                     
                     logger.logInfo("Sending to firebase server");
-                    this.sendToFirebase(ticketId, statusId, trimmedAccounts);
+                    this.sendToFirebase(ticketId, statusId, trimmedAccounts, context);
 
 //                    if ("15".equals(statusId) || "4".equals(statusId)) {
 //                        // 15 = suspended, 4 = fixed
@@ -580,60 +633,60 @@ public class TelegramNotificationMessageListener implements MessageListener {
                     // It seems that telegram won't be used. If so, comment out
                     // the following if block.
                     //if (context != null) {
-                    if (!Commons.isEmptyStrIgnoreSpaces(context)) {
-                        List<TelegramRequestResult> result = Collections.EMPTY_LIST;
-
-                        if (context.startsWith(DISPATCH_PREFIX)) { // set keyword to activate "dispatch"-ing tickets to technicians
-                            context = context.substring(DISPATCH_PREFIX.length());
-                            result = dispatchTicket(ticket, context);
-
-                        } else {        
-                            if (!trimmedAccounts.isEmpty()) {
-                                String[] sfa = new String[trimmedAccounts.size()];
-                                sfa = trimmedAccounts.toArray(sfa);
-                                result = sendToSpecifiedAccountsWithoutDispatch(ticket, sfa, context);
-
-                            } else {
-                                logger.logError("No accounts available for dispatching ticket: " + ticketId);
-                                // no notification error record should be present.
-                                // because no fatal error and it is expected to be
-                                // error if no account target (mobile numbers)
-                                // available to be sent to.
-
-                            }
-
-                        }
-
-                        // Now, create a notification record
-                        // see entry in NOTIFICATION_RECORD table. Any result, error or not
-                        // must be recorded.
-                        for (TelegramRequestResult rr : result) {
-                            NotificationRecord nr2 = new NotificationRecord(null,
-                                    "telegram", new Timestamp(rr.getDate()), "0", null);
-
-                            nr2.setReceiver(rr.getMobile());
-                            nr2.setContent(rr.getMessage());
-                            if (ticketId != null) {
-                                nr2.setTicket(ticketId);
-                            }
-//                            nr2.setReceiverName(ticketId);
-
-                            // from default Sms listener
-                            if (rr.getStatus() == S_OK) {
-                                nr2.setSucFlag("1");
-                            } else {
-                                nr2.setSucFlag("2");
-                            }
-
-                            if (rr.getReceiverName() != null) {
-                                nr2.setReceiverName(rr.getReceiverName());
-                            }
-
-                            this.notificationManagerDAO.createNotificationRecord(nr2);
-                            NotificationRecordHelper.getInstance().recordNotificationToHistory(nr2, statusId);
-
-                        }
-                    }
+//                    if (!Commons.isEmptyStrIgnoreSpaces(context)) {
+//                        List<TelegramRequestResult> result = Collections.EMPTY_LIST;
+//
+//                        if (context.startsWith(DISPATCH_PREFIX)) { // set keyword to activate "dispatch"-ing tickets to technicians
+//                            context = context.substring(DISPATCH_PREFIX.length());
+//                            result = dispatchTicket(ticket, context);
+//
+//                        } else {        
+//                            if (!trimmedAccounts.isEmpty()) {
+//                                String[] sfa = new String[trimmedAccounts.size()];
+//                                sfa = trimmedAccounts.toArray(sfa);
+//                                result = sendToSpecifiedAccountsWithoutDispatch(ticket, sfa, context);
+//
+//                            } else {
+//                                logger.logError("No accounts available for dispatching ticket: " + ticketId);
+//                                // no notification error record should be present.
+//                                // because no fatal error and it is expected to be
+//                                // error if no account target (mobile numbers)
+//                                // available to be sent to.
+//
+//                            }
+//
+//                        }
+//
+//                        // Now, create a notification record
+//                        // see entry in NOTIFICATION_RECORD table. Any result, error or not
+//                        // must be recorded.
+//                        for (TelegramRequestResult rr : result) {
+//                            NotificationRecord nr2 = new NotificationRecord(null,
+//                                    "telegram", new Timestamp(rr.getDate()), "0", null);
+//
+//                            nr2.setReceiver(rr.getMobile());
+//                            nr2.setContent(rr.getMessage());
+//                            if (ticketId != null) {
+//                                nr2.setTicket(ticketId);
+//                            }
+////                            nr2.setReceiverName(ticketId);
+//
+//                            // from default Sms listener
+//                            if (rr.getStatus() == S_OK) {
+//                                nr2.setSucFlag("1");
+//                            } else {
+//                                nr2.setSucFlag("2");
+//                            }
+//
+//                            if (rr.getReceiverName() != null) {
+//                                nr2.setReceiverName(rr.getReceiverName());
+//                            }
+//
+//                            this.notificationManagerDAO.createNotificationRecord(nr2);
+//                            NotificationRecordHelper.getInstance().recordNotificationToHistory(nr2, statusId);
+//
+//                        }
+//                    }
 //
 //                    String userid = ticket.getSlmUserByAssigneeId().getUserId();
 //                    logger.logInfo("Assigned userID = " + userid);
@@ -683,9 +736,9 @@ public class TelegramNotificationMessageListener implements MessageListener {
                 isError = true;
                 logger.logError("InterruptedException", ex);
                 
-            } catch (PvExtPersistenceException ex) {
-                isError = true;
-                logger.logError("PvExtPersistenceException", ex);
+//            } catch (PvExtPersistenceException ex) {
+//                isError = true;
+//                logger.logError("PvExtPersistenceException", ex);
 
             } catch (Exception ex) {
                 isError = true;
@@ -694,19 +747,20 @@ public class TelegramNotificationMessageListener implements MessageListener {
             }
             
             if (isError) {
-                logger.logInfo("Notification error, record the failure");
-                NotificationRecord nr = new NotificationRecord(null, "telegram", new Timestamp(new Date().getTime()), "0", null);
-                nr.setReceiver(accounts);
-                nr.setContent(context);
-                if (ticketId != null) {
-                    nr.setTicket(ticketId);
-                }
-                
-                // taken from EmailMessageListener class
-                nr.setSucFlag("0");
-                this.notificationManagerDAO.createNotificationRecord(nr);
-                NotificationRecordHelper helper = NotificationRecordHelper.getInstance();
-                helper.recordNotificationToHistory(nr, statusId);
+                createFatalNotificationRecord(accounts, context, ticketId, statusId);
+//                logger.logInfo("Notification error, record the failure");
+//                NotificationRecord nr = new NotificationRecord(null, "tlg-FCM", new Timestamp(new Date().getTime()), "0", null);
+//                nr.setReceiver(accounts);
+//                nr.setContent(context);
+//                if (ticketId != null) {
+//                    nr.setTicket(ticketId);
+//                }
+//                
+//                // taken from EmailMessageListener class
+//                nr.setSucFlag("0");
+//                this.notificationManagerDAO.createNotificationRecord(nr);
+//                NotificationRecordHelper helper = NotificationRecordHelper.getInstance();
+//                helper.recordNotificationToHistory(nr, statusId);
                 
                 // hmmm, should create ticket for notification error?
                 this.ticketManager.createTicketForNotificationError();
