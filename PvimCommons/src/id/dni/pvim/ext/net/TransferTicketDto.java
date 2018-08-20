@@ -17,6 +17,15 @@ public class TransferTicketDto {
     private Map<String, Object> ticketMap;
     private String ticketId;
     private List<String> accountList;
+    private String context;
+
+    public String getContext() {
+        return context;
+    }
+
+    public void setContext(String context) {
+        this.context = context;
+    }
 
     public List<String> getAccountList() {
         return accountList;
@@ -52,8 +61,7 @@ public class TransferTicketDto {
 
     @Override
     public String toString() {
-        return "TransferTicketDto{" + "lastupdated=" + lastupdated + ", ticketMap=" + ticketMap + '}';
+        return "TransferTicketDto{" + "lastupdated=" + lastupdated + ", ticketMap=" + ticketMap + ", ticketId=" + ticketId + ", accountList=" + accountList + ", context=" + context + '}';
     }
-    
     
 }

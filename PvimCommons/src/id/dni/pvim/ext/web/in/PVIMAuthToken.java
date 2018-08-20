@@ -34,7 +34,7 @@ public class PVIMAuthToken {
 
     @Override
     public String toString() {
-        return "PVIMAuthToken{" + "username=" + username + ", password=" + password + '}';
+        return "PVIMAuthToken{" + "username=" + username /*+ ", password=" + password*/ + '}';
     }
     
     
