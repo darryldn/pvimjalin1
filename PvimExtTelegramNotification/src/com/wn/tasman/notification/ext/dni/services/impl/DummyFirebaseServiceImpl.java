@@ -12,9 +12,9 @@ import id.dni.pvim.ext.net.SendTicketRemoteResponseJson;
 import id.dni.pvim.ext.net.TransferTicketDto;
 import id.dni.pvim.ext.web.in.Commons;
 import id.dni.pvim.ext.web.in.OperationError;
+import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,14 +33,15 @@ public class DummyFirebaseServiceImpl implements FirebaseService {
 
     private Properties prop;
     
-    public void setProperties(Properties prop) {
-        this.prop = prop;
-    }
+//    private void setProperties(Properties prop) {
+//        this.prop = prop;
+//    }
     
     @PostConstruct
     public void init() {
         if (this.prop == null) {
-            InputStream firebasePropIn = this.getClass().getResourceAsStream("/firebase.properties");
+//            InputStream firebasePropIn = this.getClass().getResourceAsStream("/firebase.properties");
+            InputStream firebasePropIn = this.getClass().getResourceAsStream("/dmz.properties");
             prop = new Properties();
             try {
                 prop.load(firebasePropIn);
@@ -72,8 +73,15 @@ public class DummyFirebaseServiceImpl implements FirebaseService {
         try {
             Logger.getLogger(this.getClass().getName()).log(Level.INFO, "ticket: {0}", ticketMap);
             
+            String username = this.prop.getProperty("firebase.workaround.username");
+            String password = this.prop.getProperty("firebase.workaround.password");
+            PVIMAuthToken auth = new PVIMAuthToken();
+            auth.setPassword(password);
+            auth.setUsername(username);
+            ticketMap.setAuth(auth);
+            
             String strUrl = url;
-            int timeout = Integer.parseInt(this.prop.getProperty("firebase.database.timeout"));
+            int timeout = Integer.parseInt(this.prop.getProperty("firebase.workaround.timeout"));
             Gson gson = new Gson();
             String jsonData = gson.toJson(ticketMap);
             String returnData = Commons.postJsonRequest(strUrl, timeout, jsonData);
@@ -102,7 +110,7 @@ public class DummyFirebaseServiceImpl implements FirebaseService {
     @Override
     @Async
     public void remove(TransferTicketDto ticketMap) {
-        sendRemote(ticketMap, this.prop.getProperty("firebase.workaround.url.removeticket"));
+//        sendRemote(ticketMap, this.prop.getProperty("firebase.workaround.url.removeticket"));
     }
 
     @Override
