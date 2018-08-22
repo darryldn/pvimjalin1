@@ -63,6 +63,13 @@ public class TicketOperation {
         return err;
     }
     
+    private OperationError readException(Exception ex) {
+        OperationError err = new OperationError();
+        err.setErrCode("" + PVIMErrorCodes.E_UNKNOWN_ERROR);
+        err.setErrMsg("Internal server error");
+        return err;
+    }
+    
     private PVIMUpdateTicketResponse errMandatoryNotes() {
         PVIMUpdateTicketResponse resp = new PVIMUpdateTicketResponse();
         OperationError err = new OperationError();
@@ -154,6 +161,10 @@ public class TicketOperation {
             resp.setTicket(returned);
             
         } catch (PvimWSException ex) {
+            Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            resp.setErr(readException(ex));
+            
+        } catch (Exception ex) {
             Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             resp.setErr(readException(ex));
             
@@ -323,6 +334,10 @@ public class TicketOperation {
             err.setErrMsg("Database error, please contact administrator");
             resp.setErr(err);
             
+        } catch (Exception ex) {
+            Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            resp.setErr(readException(ex));
+            
         }
         
         return resp;
@@ -349,6 +364,10 @@ public class TicketOperation {
             
         } catch (PvimWSException ex) {
             Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, null, ex);
+            resp.setErr(readException(ex));
+            
+        } catch (Exception ex) {
+            Logger.getLogger(TicketOperation.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             resp.setErr(readException(ex));
             
         }

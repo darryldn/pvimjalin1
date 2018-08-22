@@ -35,21 +35,21 @@ import java.util.logging.Logger;
  * @author darryl.sulistyan
  */
 public class LocationOperation {
-    
+
     private DBMachineGpsVo getMachineGps(String deviceID) throws PvExtPersistenceException {
         // TODO: Implement the machine gps reading from ProView server DB
-        
+
         // now, just feed dummy data
         if (deviceID == null) {
             return null;
         }
-        
+
         IDBMachineBasedataRepository repo = RepositoryFactory.getInstance().getMachineBasedataRepository();
         List<DBMachineBasedataVo> machinegps = repo.query(new DeviceGpsBasedataSpecification(deviceID));
         if (machinegps.isEmpty()) {
             return null;
         }
-        
+
         double latitude = 0.0;
         double longitude = 0.0;
         int cnt = 0;
@@ -65,17 +65,17 @@ public class LocationOperation {
                 break;
             }
         }
-        
+
         if (cnt < 2) {
-            Logger.getLogger(this.getClass().getName()).log(Level.FINE, 
+            Logger.getLogger(this.getClass().getName()).log(Level.FINE,
                     " - Device Error, latitude or longitude data not complete for deviceID: {0}", deviceID);
             return null;
         }
-        
-        Logger.getLogger(this.getClass().getName()).log(Level.FINE, 
-                " - deviceID: {0} latitude: {1} longitude: {2}", 
+
+        Logger.getLogger(this.getClass().getName()).log(Level.FINE,
+                " - deviceID: {0} latitude: {1} longitude: {2}",
                 new Object[]{deviceID, latitude, longitude});
-        
+
         DBMachineGpsVo gps = new DBMachineGpsVo();
         gps.setDescription("DUMMY ATM");
         gps.setDeviceID(deviceID);
@@ -84,175 +84,228 @@ public class LocationOperation {
         gps.setLongitude(new BigDecimal(longitude));
         gps.setStatus("OK");
         return gps;
-        
+
     }
-    
+
     public PVIMEngineerLocationResponse updateEngineerLocation(PVIMEngineerLocationRequest request) {
         PVIMAuthToken auth = request.getAuth(); // not used
         PVIMLocation reqLoc = request.getLoc();
-        
+
         PVIMEngineerLocationResponse response = new PVIMEngineerLocationResponse();
-        if (reqLoc == null) {
+
+        if (!checkUser(auth)) {
+
             OperationError err = new OperationError();
-            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
-            err.setErrMsg("No Input given");
+            err.setErrCode("" + PVErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("No auth token or wrong username / password");
             response.setErr(err);
-            return response;
-        }
-        
-        IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
-        boolean isRollback = false;
-        boolean isSuccess = false;
-        try {
-            pvimTx.begin();
-            Object trxObject = pvimTx.getTrxConnection();
-            ISlmLocationRepository slmLocationRepos = RepositoryFactory.getInstance().getSlmLocationRepository(trxObject);
-            SlmLocationVo newLoc = new SlmLocationVo();
-            newLoc.setEngineerID(reqLoc.getId());
-            newLoc.setLatitude(reqLoc.getLatitude());
-            newLoc.setLongitude(reqLoc.getLongitude());
-            newLoc.setNotes(reqLoc.getNotes());
-            newLoc.setLastUpdated(System.currentTimeMillis());
-            
-            isSuccess = slmLocationRepos.update(newLoc);
-            if (!isSuccess) {
-                isSuccess = slmLocationRepos.insert(newLoc);
-            }
-            
-            if (isSuccess) {
-                List<PVIMLocation> lc = new ArrayList<>();
-                lc.add(reqLoc);
-                response.setLoc(lc);
-            } else {
+
+        } else {
+
+            if (reqLoc == null) {
                 OperationError err = new OperationError();
-                err.setErrCode("" + PVIMErrorCodes.E_DATABASE_ERROR);
-                err.setErrMsg("Failed update location data");
+                err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+                err.setErrMsg("No Input given");
                 response.setErr(err);
+                return response;
             }
-            
-        } catch (PvExtPersistenceException ex) {
-            Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
-            isRollback = true;
-            OperationError err = new OperationError();
-            err.setErrCode(PVIMErrorCodes.E_DATABASE_ERROR + "");
-            err.setErrMsg("Unable to get location data");
-            response.setErr(err);
-            
-        } finally {
+
+            IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
+            boolean isRollback = false;
+            boolean isSuccess = false;
             try {
-                if (isRollback) {
-                    pvimTx.rollback();
-                } else {
-                    pvimTx.commit();
+                pvimTx.begin();
+                Object trxObject = pvimTx.getTrxConnection();
+                ISlmLocationRepository slmLocationRepos = RepositoryFactory.getInstance().getSlmLocationRepository(trxObject);
+                SlmLocationVo newLoc = new SlmLocationVo();
+                newLoc.setEngineerID(reqLoc.getId());
+                newLoc.setLatitude(reqLoc.getLatitude());
+                newLoc.setLongitude(reqLoc.getLongitude());
+                newLoc.setNotes(reqLoc.getNotes());
+                newLoc.setLastUpdated(System.currentTimeMillis());
+
+                isSuccess = slmLocationRepos.update(newLoc);
+                if (!isSuccess) {
+                    isSuccess = slmLocationRepos.insert(newLoc);
                 }
-                pvimTx.close();
+
+                if (isSuccess) {
+                    List<PVIMLocation> lc = new ArrayList<>();
+                    lc.add(reqLoc);
+                    response.setLoc(lc);
+                } else {
+                    OperationError err = new OperationError();
+                    err.setErrCode("" + PVIMErrorCodes.E_DATABASE_ERROR);
+                    err.setErrMsg("Failed update location data");
+                    response.setErr(err);
+                }
+
             } catch (PvExtPersistenceException ex) {
                 Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+                isRollback = true;
+                OperationError err = new OperationError();
+                err.setErrCode(PVIMErrorCodes.E_DATABASE_ERROR + "");
+                err.setErrMsg("Unable to get location data");
+                response.setErr(err);
+
+            } finally {
+                try {
+                    if (isRollback) {
+                        pvimTx.rollback();
+                    } else {
+                        pvimTx.commit();
+                    }
+                    pvimTx.close();
+                } catch (PvExtPersistenceException ex) {
+                    Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
             }
-            
         }
-        
         return response;
     }
-    
+
     public PVIMEngineerLocationResponse getEngineerLocation(PVIMEngineerLocationRequest request) {
         PVIMAuthToken auth = request.getAuth(); // not used
         PVIMLocation reqLoc = request.getLoc();
         PVIMEngineerLocationResponse response = new PVIMEngineerLocationResponse();
-        PaginationRequest page = request.getPage();
-        int pageNum = -1, pageSize = -1;
-        if (page != null) {
-            pageNum = page.getPageNum();
-            pageSize = page.getPageSize();
-        }
-        
-        IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
-        boolean isRollback = false;
-        try {
-            pvimTx.begin();
-            Object trxObject = pvimTx.getTrxConnection();
-            ISlmLocationRepository slmLocationRepos = RepositoryFactory.getInstance().getSlmLocationRepository(trxObject);
-            List<SlmLocationVo> loclist;
-            if (reqLoc == null) {
-                loclist = slmLocationRepos.query(new GetAllPvimEngineerLocationSpecification(pageSize, pageNum));
-            } else {
-                loclist = slmLocationRepos.query(new GetPvimEngineerLocationByIdSpecification(reqLoc.getId()));
-            }
-            
-            List<PVIMLocation> result = new ArrayList<>();
-            for (SlmLocationVo loc : loclist) {
-                PVIMLocation ploc = new PVIMLocation();
-                ploc.setId(loc.getEngineerID());
-                if (loc.getLatitude() != null) {
-                    ploc.setLatitude(loc.getLatitude().doubleValue());
-                }
-                if (loc.getLongitude() != null) {
-                    ploc.setLongitude(loc.getLongitude().doubleValue());
-                }
-                ploc.setNotes(loc.getNotes());
-                result.add(ploc);
-            }
-            
-            response.setLoc(result);
-            
-            if (response.getLoc().isEmpty()) {
-                OperationError err = new OperationError();
-                err.setErrCode(PVIMErrorCodes.E_INPUT_ERROR + "");
-                err.setErrMsg("No Engineer found");
-                response.setErr(err);
-            }
-            
-        } catch (PvExtPersistenceException ex) {
-            Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
-            isRollback = true;
+
+        if (!checkUser(auth)) {
+
             OperationError err = new OperationError();
-            err.setErrCode(PVIMErrorCodes.E_DATABASE_ERROR + "");
-            err.setErrMsg("Unable to get location data");
+            err.setErrCode("" + PVErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("No auth token or wrong username / password");
             response.setErr(err);
-            
-        } finally {
+
+        } else {
+
+            PaginationRequest page = request.getPage();
+            int pageNum = -1, pageSize = -1;
+            if (page != null) {
+                pageNum = page.getPageNum();
+                pageSize = page.getPageSize();
+            }
+
+            IProViewTrx pvimTx = PVIMDBConnectionFactory.getInstance().getTransaction();
+            boolean isRollback = false;
             try {
-                if (isRollback) {
-                    pvimTx.rollback();
+                pvimTx.begin();
+                Object trxObject = pvimTx.getTrxConnection();
+                ISlmLocationRepository slmLocationRepos = RepositoryFactory.getInstance().getSlmLocationRepository(trxObject);
+                List<SlmLocationVo> loclist;
+                if (reqLoc == null) {
+                    loclist = slmLocationRepos.query(new GetAllPvimEngineerLocationSpecification(pageSize, pageNum));
                 } else {
-                    pvimTx.commit();
+                    loclist = slmLocationRepos.query(new GetPvimEngineerLocationByIdSpecification(reqLoc.getId()));
                 }
-                pvimTx.close();
+
+                List<PVIMLocation> result = new ArrayList<>();
+                for (SlmLocationVo loc : loclist) {
+                    PVIMLocation ploc = new PVIMLocation();
+                    ploc.setId(loc.getEngineerID());
+                    if (loc.getLatitude() != null) {
+                        ploc.setLatitude(loc.getLatitude().doubleValue());
+                    }
+                    if (loc.getLongitude() != null) {
+                        ploc.setLongitude(loc.getLongitude().doubleValue());
+                    }
+                    ploc.setNotes(loc.getNotes());
+                    result.add(ploc);
+                }
+
+                response.setLoc(result);
+
+                if (response.getLoc().isEmpty()) {
+                    OperationError err = new OperationError();
+                    err.setErrCode(PVIMErrorCodes.E_INPUT_ERROR + "");
+                    err.setErrMsg("No Engineer found");
+                    response.setErr(err);
+                }
+
             } catch (PvExtPersistenceException ex) {
                 Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+                isRollback = true;
+                OperationError err = new OperationError();
+                err.setErrCode(PVIMErrorCodes.E_DATABASE_ERROR + "");
+                err.setErrMsg("Unable to get location data");
+                response.setErr(err);
+
+            } finally {
+                try {
+                    if (isRollback) {
+                        pvimTx.rollback();
+                    } else {
+                        pvimTx.commit();
+                    }
+                    pvimTx.close();
+                } catch (PvExtPersistenceException ex) {
+                    Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
             }
-            
         }
-        
+
         return response;
     }
-    
+
+    private boolean checkUser(PVAuthToken auth) {
+        if (auth == null) {
+            return false;
+        }
+        UserOperation pvOp = new UserOperation();
+        PVLoginRequest pvReq = new PVLoginRequest();
+        pvReq.setUsername(auth.getUsername());
+        pvReq.setPassword(auth.getPassword());
+        return pvOp.login(pvReq).isIsLoginSuccess();
+    }
+
+    private boolean checkUser(PVIMAuthToken auth) {
+        if (auth == null) {
+            return false;
+        }
+        PVAuthToken pvauth = new PVAuthToken();
+        pvauth.setPassword(auth.getPassword());
+        pvauth.setUsername(auth.getUsername());
+        return checkUser(pvauth);
+    }
+
     public PVGetDeviceIDResponse getDeviceIDLocation(PVGetDeviceIDRequest request) {
         PVAuthToken auth = request.getAuth(); // not used
         String deviceID = request.getDeviceID();
         PVGetDeviceIDResponse response = new PVGetDeviceIDResponse();
-        
-        try {
-            DBMachineGpsVo machineLocation = /*repository.*/getMachineGps(deviceID);
-            if (machineLocation != null) {
-                response.setLocation(machineLocation);
-            } else {
-                OperationError err=  new OperationError();
-                err.setErrCode("" + PVErrorCodes.E_CONFIG);
-                err.setErrMsg("No GPS information exist for this device");
-                response.setErr(err);
-            }
-            
-        } catch (PvExtPersistenceException ex) {
-            Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+
+        if (!checkUser(auth)) {
+
             OperationError err = new OperationError();
-            err.setErrCode("" + PVErrorCodes.E_DATABASE_ERROR);
-            err.setErrMsg(ex.getMessage());
+            err.setErrCode("" + PVErrorCodes.E_INPUT_ERROR);
+            err.setErrMsg("No auth token or wrong username / password");
             response.setErr(err);
-            
+
+        } else {
+
+            try {
+                DBMachineGpsVo machineLocation = /*repository.*/ getMachineGps(deviceID);
+                if (machineLocation != null) {
+                    response.setLocation(machineLocation);
+                } else {
+                    OperationError err = new OperationError();
+                    err.setErrCode("" + PVErrorCodes.E_CONFIG);
+                    err.setErrMsg("No GPS information exist for this device");
+                    response.setErr(err);
+                }
+
+            } catch (PvExtPersistenceException ex) {
+                Logger.getLogger(LocationOperation.class.getName()).log(Level.SEVERE, null, ex);
+                OperationError err = new OperationError();
+                err.setErrCode("" + PVErrorCodes.E_DATABASE_ERROR);
+                err.setErrMsg(ex.getMessage());
+                response.setErr(err);
+
+            }
+
         }
-        
+
         return response;
     }
-    
+
 }
