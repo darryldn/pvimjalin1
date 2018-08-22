@@ -18,7 +18,10 @@ import id.dni.ext.firebase.cloud.msg.json.FcmMessageJson;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageNotificationJson;
 import id.dni.ext.firebase.cloud.msg.project.FcmProjectToken;
 import id.dni.pvim.ext.web.in.Commons;
+import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -50,12 +53,31 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
     }
     
     private String fcmUrl;
+    private String fcmProxyUrl;
+    private String fcmProxyUser;
+    private String fcmProxyPass;
+    
     private int fcmTimeout;
     private String fcmServerAuthLegacyKey;
     private String fcmServerAuthKey;
     
     public void setFcmMessageService(FcmMessageService service) {
         this.fcmService = service;
+    }
+    
+    @Value("${firebase.cloudmessaging.proxy.server.url}")
+    public void setFcmProxyUrl(String url) {
+        this.fcmProxyUrl = url;
+    }
+    
+    @Value("${firebase.cloudmessaging.proxy.server.username}")
+    public void setFcmProxyUsername(String u) {
+        this.fcmProxyUser = u;
+    }
+    
+    @Value("${firebase.cloudmessaging.proxy.server.password}")
+    public void setFcmProxyPassword(String u) {
+        this.fcmProxyPass = u;
     }
     
     @Value("${firebase.cloudmessaging.server.url}")
@@ -112,6 +134,44 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
         
     }
     
+    private FcmMessageDownstreamResponseJson sendMessageViaProxyWithPvimAuth(FcmMessageJson message) throws RemoteWsException {
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    ">> sendMessageViaProxyNoAuth");
+        
+        Gson gson = new Gson();
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - message: {0}", gson.toJson(message));
+        
+        try {
+            
+            Map<String, Object> jsonObj = new HashMap<>();
+            jsonObj.put("msg", message);
+            
+            PVIMAuthToken auth = new PVIMAuthToken();
+            auth.setUsername(this.fcmProxyUser);
+            auth.setPassword(this.fcmProxyPass);
+            jsonObj.put("auth", auth);
+            
+            String jsonObjStr = gson.toJson(jsonObj);
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - jsonObjStr: {0}", jsonObjStr);
+            
+            String postJsonRequest = Commons.postJsonRequest(this.fcmProxyUrl, fcmTimeout, jsonObjStr);
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - obtain result: {0}", postJsonRequest);
+            FcmMessageDownstreamResponseJson responseObj = new FcmMessageDownstreamResponseJson();
+            responseObj.setSuccess(1);
+            return responseObj;
+            
+        } catch (IOException ex) {
+            throw new RemoteWsException(ex);
+            
+        } finally {
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                        "<< sendMessageViaProxyNoAuth");
+        }
+    }
+    
     private FcmMessageDownstreamResponseJson sendMessage2(FcmMessageJson message) 
             throws RemoteWsException {
         
@@ -128,6 +188,7 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
                         .setNotification(AndroidNotification.builder()
                                 .setTitle(message.getNotification().getTitle())
                                 .setBody(message.getNotification().getBody())
+                                .setSound("default")
                                 .build()
                         ).build()
                 )
@@ -157,7 +218,8 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
     public FcmMessageDownstreamResponseJson sendMessage(FcmMessageJson message) 
             throws RemoteWsException {
         
-        return sendMessage2(message);
+        //return sendMessage2(message);
+        return sendMessageViaProxyWithPvimAuth(message);
         
 //        final FcmProjectToken projectToken = new FcmProjectToken();
 //        

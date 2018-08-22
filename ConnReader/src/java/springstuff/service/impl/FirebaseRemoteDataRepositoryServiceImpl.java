@@ -16,6 +16,7 @@ import id.dni.ext.firebase.cloud.msg.json.FcmMessageDownstreamResponseJson;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageJson;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageNotificationJson;
 import id.dni.ext.prop.FirebaseUtil;
+import id.dni.ext.web.Util;
 import id.dni.ext.web.ws.obj.RestTicketDto;
 import id.dni.ext.web.ws.obj.SendTicketRemoteResponse;
 import id.dni.ext.web.ws.obj.firebase.FbTicketDto;
@@ -44,11 +45,13 @@ import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByMobileSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserTokenByIdSpecification;
 import id.dni.pvim.ext.repo.db.vo.SlmUserTokenVo;
 import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
+import id.dni.pvim.ext.service.json.ProviewLoginResponse;
 import id.dni.pvim.ext.telegram.commons.sender.MessageSender;
 import id.dni.pvim.ext.telegram.repo.ITelegramSuscribersRepository;
 import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
 import id.dni.pvim.ext.telegram.repo.spec.TelegramSubscribersListOfPhonesSpec;
 import id.dni.pvim.ext.web.in.Commons;
+import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.Callable;
@@ -56,6 +59,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import springstuff.exceptions.RemoteWsException;
 import springstuff.service.AsyncRunnerService;
+import springstuff.service.LoginService;
 import springstuff.service.RemoteDataRepositoryService;
 import springstuff.service.firebase.FirebaseCloudMessagingService;
 
@@ -197,6 +201,31 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
     public void setAsyncRunnerService(AsyncRunnerService service) {
         this.async = service;
     }
+    
+    private LoginService loginService;
+    
+    @Autowired
+    public void setLoginService(LoginService loginService) {
+        this.loginService = loginService;
+    }
+    
+    private String loginUrl;
+    private int timeout;
+
+    @Value("${Login.url}")
+    public void setLoginUrl(String l) {
+        this.loginUrl = l;
+    }
+
+    @Value("${Login.timeout}")
+    public void setLoginTimeout(String t) {
+        try {
+            timeout = Integer.parseInt(t);
+        } catch (NumberFormatException ex) {
+            timeout = 3000;
+        }
+    }
+    
 
     /**
      * Remove tickets in firebase database.
@@ -290,28 +319,28 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
 
     }
 
-    private static class DumbFirebaseCompletionListener implements DatabaseReference.CompletionListener {
-
-        private final String message;
-
-        public DumbFirebaseCompletionListener(String message) {
-            this.message = message;
-        }
-
-        public DumbFirebaseCompletionListener() {
-            this(null);
-        }
-
-        @Override
-        public void onComplete(DatabaseError de, DatabaseReference dr) {
-            if (de != null) {
-                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
-            } else if (this.message != null) {
-                Logger.getLogger(this.getClass().getName()).log(Level.INFO, this.message);
-            }
-        }
-
-    }
+//    private static class DumbFirebaseCompletionListener implements DatabaseReference.CompletionListener {
+//
+//        private final String message;
+//
+//        public DumbFirebaseCompletionListener(String message) {
+//            this.message = message;
+//        }
+//
+//        public DumbFirebaseCompletionListener() {
+//            this(null);
+//        }
+//
+//        @Override
+//        public void onComplete(DatabaseError de, DatabaseReference dr) {
+//            if (de != null) {
+//                Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+//            } else if (this.message != null) {
+//                Logger.getLogger(this.getClass().getName()).log(Level.INFO, this.message);
+//            }
+//        }
+//
+//    }
 
     @Override
     public void send(List<DeviceComponentStateJson> devices) throws RemoteRepositoryException {
@@ -474,49 +503,49 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         return fbTickets;
     }
     
-    private void setEngineerIdInAtmFirebase(DatabaseReference ref, String keyID, String key, String assigned) {
-        if (FirebaseUtil.isValidKey(keyID) && FirebaseUtil.isValidKey(key)) {
-            ref.child(keyID).child(key).setValue(assigned, 
-                    new DatabaseReference.CompletionListener() {
-                @Override
-                public void onComplete(DatabaseError de, DatabaseReference dr) {
-                    if (de != null) {
-                    Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
-                }
-                }
-            });
-        } else {
-            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
-                    "Invalid Key {0} or {1} is found. Please only use alphanumeric characters", 
-                    new Object[]{keyID, key});
-        }
-    }
+//    private void setEngineerIdInAtmFirebase(DatabaseReference ref, String keyID, String key, String assigned) {
+//        if (FirebaseUtil.isValidKey(keyID) && FirebaseUtil.isValidKey(key)) {
+//            ref.child(keyID).child(key).setValue(assigned, 
+//                    new DatabaseReference.CompletionListener() {
+//                @Override
+//                public void onComplete(DatabaseError de, DatabaseReference dr) {
+//                    if (de != null) {
+//                    Logger.getLogger(this.getClass().getName()).log(Level.SEVERE, null, de);
+//                }
+//                }
+//            });
+//        } else {
+//            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+//                    "Invalid Key {0} or {1} is found. Please only use alphanumeric characters", 
+//                    new Object[]{keyID, key});
+//        }
+//    }
     
-    private static class TicketPair {
-        private String ticketId;
-        private long timestamp;
-
-        public TicketPair(String ticketId, long timestamp) {
-            this.ticketId = ticketId;
-            this.timestamp = timestamp;
-        }
-
-        public String getTicketId() {
-            return ticketId;
-        }
-
-        public void setTicketId(String ticketId) {
-            this.ticketId = ticketId;
-        }
-
-        public long getTimestamp() {
-            return timestamp;
-        }
-
-        public void setTimestamp(long timestamp) {
-            this.timestamp = timestamp;
-        }
-    }
+//    private static class TicketPair {
+//        private String ticketId;
+//        private long timestamp;
+//
+//        public TicketPair(String ticketId, long timestamp) {
+//            this.ticketId = ticketId;
+//            this.timestamp = timestamp;
+//        }
+//
+//        public String getTicketId() {
+//            return ticketId;
+//        }
+//
+//        public void setTicketId(String ticketId) {
+//            this.ticketId = ticketId;
+//        }
+//
+//        public long getTimestamp() {
+//            return timestamp;
+//        }
+//
+//        public void setTimestamp(long timestamp) {
+//            this.timestamp = timestamp;
+//        }
+//    }
     
     
 
@@ -675,6 +704,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                 
             } catch (PvExtPersistenceException ex) {
                 Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+                
             } 
             
         }
@@ -833,7 +863,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
 //            final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.pvimSlmUserFirebaseDBPath);
             final FirebaseAuth auth = FirebaseAuth.getInstance(FirebaseApp.getInstance());
             List<SlmUserVo> usersVo = this.pvimSlmUserRepository.query(new GetAllPvimUsersSpecification());
-            Map<String, Object> fbUsers = new HashMap<>();
+//            Map<String, Object> fbUsers = new HashMap<>();
             for (SlmUserVo userVo : usersVo) {
                 FbPvimSlmUserJson fbUser = new FbPvimSlmUserJson();
                 fbUser.setEmail(userVo.getEmail());
@@ -861,19 +891,19 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                 }
                 
                 
-                if (FirebaseUtil.isValidKey(usLoginName)) {
-                    fbUsers.put(fbUser.getLoginName(), fbUser); // Deal, that login name will be used.
-                } else {
-                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
-                            "unable to send user: {0} because it contains illegal characters! Please only use alphanumeric!", 
-                            usLoginName);
-                }
+//                if (FirebaseUtil.isValidKey(usLoginName)) {
+//                    fbUsers.put(fbUser.getLoginName(), fbUser); // Deal, that login name will be used.
+//                } else {
+//                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+//                            "unable to send user: {0} because it contains illegal characters! Please only use alphanumeric!", 
+//                            usLoginName);
+//                }
 //                fbUsers.put(fbUser.getUserId(), fbUser); // don't use login name
                                                          // because login name can have dot (.) character
                                                          // which is forbidden by firebase.
                                                          // userid is autogenerated and guaranteed alphanumeric ONLY
             }
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - reading users from db: {0}", fbUsers);
+//            Logger.getLogger(this.getClass().getName()).log(Level.INFO, " - reading users from db: {0}", fbUsers);
             /*db.updateChildren(fbUsers, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(DatabaseError de, DatabaseReference dr) {

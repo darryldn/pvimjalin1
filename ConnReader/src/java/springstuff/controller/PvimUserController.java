@@ -11,11 +11,15 @@ import id.dni.ext.web.ws.obj.firebase.FbPvimSlmUserJson;
 import id.dni.pvim.ext.err.PVIMErrorCodes;
 import id.dni.pvim.ext.repo.db.vo.SlmUserTokenVo;
 import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
+import id.dni.pvim.ext.service.json.ProviewLoginRequest;
+import id.dni.pvim.ext.service.json.ProviewLoginResponse;
 import id.dni.pvim.ext.web.in.OperationError;
 import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import id.dni.pvim.ext.web.in.PVIMUserTokenRequest;
 import id.dni.pvim.ext.web.in.PVIMUserTokenResponse;
 import id.dni.pvim.ext.web.in.UserToken;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +28,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import springstuff.exceptions.RemoteWsException;
 import springstuff.json.PVIMGetUserRequest;
 import springstuff.json.PVIMGetUserRequestPayload;
 import springstuff.json.PVIMGetUserResponse;
+import springstuff.service.LoginService;
 import springstuff.service.UserService;
 
 /**
@@ -37,12 +43,18 @@ import springstuff.service.UserService;
 public class PvimUserController {
     
     private UserService userService;
+    private LoginService loginService;
     
     @Autowired
     public void setUserService(UserService userService) {
         this.userService = userService;
     }
     
+    @Autowired
+    public void setLoginService(LoginService l) {
+        this.loginService = l;
+    }
+
     @RequestMapping(value = "/pvim/user/token/set", method = RequestMethod.POST, 
             produces = MediaType.APPLICATION_JSON_VALUE, 
             consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -64,16 +76,39 @@ public class PvimUserController {
             return Util.returnJson(resp);
         }
         
-        SlmUserVo authUser = userService.checkUser(auth);
+        boolean loginSuccess = false;
+        try {
+            ProviewLoginRequest loginRequest = new ProviewLoginRequest();
+            loginRequest.setPassword(auth.getPassword());
+            loginRequest.setUsername(auth.getUsername());
+            ProviewLoginResponse loginResponse = //Util.login(loginService, auth, loginUrl, timeout);
+                    this.loginService.login(loginRequest);
+            if (loginResponse != null && loginResponse.isSuccess()) {
+                loginSuccess = true;
+            }
+            
+        } catch (RemoteWsException ex) {
+            Logger.getLogger(PvimUserController.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
-        if (authUser == null) {
-            // DIE!
+        if (!loginSuccess) {
             OperationError err = new OperationError();
             err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
             err.setErrMsg("Username / password error");
             resp.setErr(err);
             return Util.returnJson(resp);
         }
+        
+//        SlmUserVo authUser = userService.checkUser(auth);
+//        
+//        if (authUser == null) {
+//            // DIE!
+//            OperationError err = new OperationError();
+//            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+//            err.setErrMsg("Username / password error");
+//            resp.setErr(err);
+//            return Util.returnJson(resp);
+//        }
         
         UserToken requestToken = request.getToken();
         SlmUserTokenVo dbToken = this.userService.setOrUpdateUserToken(requestToken);
@@ -111,16 +146,39 @@ public class PvimUserController {
             return Util.returnJson(resp);
         }
         
-        SlmUserVo authUser = userService.checkUser(auth);
+        boolean loginSuccess = false;
+        try {
+            ProviewLoginRequest loginRequest = new ProviewLoginRequest();
+            loginRequest.setPassword(auth.getPassword());
+            loginRequest.setUsername(auth.getUsername());
+            ProviewLoginResponse loginResponse = //Util.login(loginService, auth, loginUrl, timeout);
+                    this.loginService.login(loginRequest);
+            if (loginResponse != null && loginResponse.isSuccess()) {
+                loginSuccess = true;
+            }
+            
+        } catch (RemoteWsException ex) {
+            Logger.getLogger(PvimUserController.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
-        if (authUser == null) {
-            // DIE!
+        if (!loginSuccess) {
             OperationError err = new OperationError();
             err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
             err.setErrMsg("Username / password error");
             resp.setErr(err);
             return Util.returnJson(resp);
         }
+        
+//        SlmUserVo authUser = userService.checkUser(auth);
+//        
+//        if (authUser == null) {
+//            // DIE!
+//            OperationError err = new OperationError();
+//            err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
+//            err.setErrMsg("Username / password error");
+//            resp.setErr(err);
+//            return Util.returnJson(resp);
+//        }
         
         UserToken requestToken = request.getToken();
         SlmUserTokenVo dbToken = this.userService.deleteUserToken(requestToken);
@@ -157,10 +215,22 @@ public class PvimUserController {
             return Util.returnJson(resp);
         }
         
-        SlmUserVo authUser = userService.checkUser(auth);
+        boolean loginSuccess = false;
+        try {
+            ProviewLoginRequest loginRequest = new ProviewLoginRequest();
+            loginRequest.setPassword(auth.getPassword());
+            loginRequest.setUsername(auth.getUsername());
+            ProviewLoginResponse loginResponse = //Util.login(loginService, auth, loginUrl, timeout);
+                    this.loginService.login(loginRequest);
+            if (loginResponse != null && loginResponse.isSuccess()) {
+                loginSuccess = true;
+            }
+            
+        } catch (RemoteWsException ex) {
+            Logger.getLogger(PvimUserController.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
-        if (authUser == null) {
-            // DIE!
+        if (!loginSuccess) {
             OperationError err = new OperationError();
             err.setErrCode("" + PVIMErrorCodes.E_INPUT_ERROR);
             err.setErrMsg("Username / password error");
