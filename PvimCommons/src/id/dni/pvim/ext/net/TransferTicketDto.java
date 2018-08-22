@@ -5,6 +5,7 @@
  */
 package id.dni.pvim.ext.net;
 
+import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import java.util.List;
 import java.util.Map;
 
@@ -15,9 +16,18 @@ import java.util.Map;
 public class TransferTicketDto {
     private long lastupdated;
     private Map<String, Object> ticketMap;
-    private String ticketId;
+    private final String ticketId;
     private List<String> accountList;
     private String context;
+    private PVIMAuthToken auth;
+
+    public PVIMAuthToken getAuth() {
+        return auth;
+    }
+
+    public void setAuth(PVIMAuthToken auth) {
+        this.auth = auth;
+    }
 
     public String getContext() {
         return context;
@@ -61,7 +71,9 @@ public class TransferTicketDto {
 
     @Override
     public String toString() {
-        return "TransferTicketDto{" + "lastupdated=" + lastupdated + ", ticketMap=" + ticketMap + ", ticketId=" + ticketId + ", accountList=" + accountList + ", context=" + context + '}';
+        return "TransferTicketDto{" + "lastupdated=" + lastupdated + ", ticketMap=" + ticketMap + ", ticketId=" + ticketId + ", accountList=" + accountList + ", context=" + context + ", auth=" + auth + '}';
     }
+    
+    
     
 }
