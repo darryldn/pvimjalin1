@@ -77,79 +77,79 @@ public class ComponentStateController {
 //        }
 //    }
 
-    @RequestMapping(value = "/device", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<String> getDeviceComponents(
-            @RequestParam(value = "id", required = false) String deviceID,
-            @RequestParam(value = "pageSize", required = false) Integer oPageSize,
-            @RequestParam(value = "pageNum", required = false) Integer oPageNum
-    ) {
-        DeviceComponentResponseJson response = new DeviceComponentResponseJson();
-        try {
-            Map<String, List<ComponentStateVo>> result;
-            if (deviceID != null) {
-                result = new HashMap<>();
-                result.put(deviceID, deviceComponentService.getDeviceComponentState(deviceID));
-            } else {
-                int pageSize = oPageSize == null ? -1 : oPageSize;
-                int pageNum = oPageNum == null ? -1 : oPageNum;
-
-                result = this.deviceComponentService.getAllDevices(pageSize, pageNum);
-            }
-            List<DeviceComponentStateJson> list = new ArrayList<>();
-
-            for (Map.Entry<String, List<ComponentStateVo>> entry : result.entrySet()) {
-                DeviceComponentStateJson ds = new DeviceComponentStateJson();
-                ds.setComponents(new ArrayList<>());
-                ds.setDeviceid(entry.getKey());
-
-                List<ComponentStateVo> entryComponents = entry.getValue();
-                ComponentStateVo ev = null;
-                for (ComponentStateVo c : entryComponents) {
-                    ds.getComponents().add(new ComponentStateJson(c.getComponent(), c.getComponentState()));
-                    ev = c;
-                }
-
-                if (ev != null) {
-                    String sLat = ev.getLatitude();
-                    String sLon = ev.getLongitude();
-
-                    if (sLat != null && sLon != null) {
-                        try {
-                            double lat = Double.parseDouble(sLat);
-                            double lon = Double.parseDouble(sLon);
-                            ds.setLocation(new MachineGpsJson(lat, lon));
-                        } catch (NumberFormatException ex) {
-
-                        }
-                    }
-                    if (ev.getDeviceDescr() != null) {
-                        ds.setDeviceType(ev.getDeviceDescr().trim());
-                    }
-                }
-
-                list.add(ds);
-            }
-            response.setDevices(list);
-
-        } catch (PvExtPersistenceException ex) {
-            Logger.getLogger(ComponentStateController.class.getName()).log(Level.SEVERE, null, ex);
-            OperationError err = new OperationError();
-            err.setErrCode("-15001");
-            err.setErrMsg(ex.getMessage());
-            response.setErr(err);
-
-        }
-
-        return Util.returnJson(response);
-
-//        Gson gson = new Gson();
-//        
-//        final HttpHeaders httpHeaders = new HttpHeaders();
-//        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-//        return new ResponseEntity<>(gson.toJson(response), httpHeaders, HttpStatus.OK);
-        //return gson.toJson(response);
-    }
+//    @RequestMapping(value = "/device", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+//    @ResponseBody
+//    public ResponseEntity<String> getDeviceComponents(
+//            @RequestParam(value = "id", required = false) String deviceID,
+//            @RequestParam(value = "pageSize", required = false) Integer oPageSize,
+//            @RequestParam(value = "pageNum", required = false) Integer oPageNum
+//    ) {
+//        DeviceComponentResponseJson response = new DeviceComponentResponseJson();
+//        try {
+//            Map<String, List<ComponentStateVo>> result;
+//            if (deviceID != null) {
+//                result = new HashMap<>();
+//                result.put(deviceID, deviceComponentService.getDeviceComponentState(deviceID));
+//            } else {
+//                int pageSize = oPageSize == null ? -1 : oPageSize;
+//                int pageNum = oPageNum == null ? -1 : oPageNum;
+//
+//                result = this.deviceComponentService.getAllDevices(pageSize, pageNum);
+//            }
+//            List<DeviceComponentStateJson> list = new ArrayList<>();
+//
+//            for (Map.Entry<String, List<ComponentStateVo>> entry : result.entrySet()) {
+//                DeviceComponentStateJson ds = new DeviceComponentStateJson();
+//                ds.setComponents(new ArrayList<>());
+//                ds.setDeviceid(entry.getKey());
+//
+//                List<ComponentStateVo> entryComponents = entry.getValue();
+//                ComponentStateVo ev = null;
+//                for (ComponentStateVo c : entryComponents) {
+//                    ds.getComponents().add(new ComponentStateJson(c.getComponent(), c.getComponentState()));
+//                    ev = c;
+//                }
+//
+//                if (ev != null) {
+//                    String sLat = ev.getLatitude();
+//                    String sLon = ev.getLongitude();
+//
+//                    if (sLat != null && sLon != null) {
+//                        try {
+//                            double lat = Double.parseDouble(sLat);
+//                            double lon = Double.parseDouble(sLon);
+//                            ds.setLocation(new MachineGpsJson(lat, lon));
+//                        } catch (NumberFormatException ex) {
+//
+//                        }
+//                    }
+//                    if (ev.getDeviceDescr() != null) {
+//                        ds.setDeviceType(ev.getDeviceDescr().trim());
+//                    }
+//                }
+//
+//                list.add(ds);
+//            }
+//            response.setDevices(list);
+//
+//        } catch (PvExtPersistenceException ex) {
+//            Logger.getLogger(ComponentStateController.class.getName()).log(Level.SEVERE, null, ex);
+//            OperationError err = new OperationError();
+//            err.setErrCode("-15001");
+//            err.setErrMsg(ex.getMessage());
+//            response.setErr(err);
+//
+//        }
+//
+//        return Util.returnJson(response);
+//
+////        Gson gson = new Gson();
+////        
+////        final HttpHeaders httpHeaders = new HttpHeaders();
+////        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+////        return new ResponseEntity<>(gson.toJson(response), httpHeaders, HttpStatus.OK);
+//        //return gson.toJson(response);
+//    }
 
     @RequestMapping(value = "/devicepost",
             method = RequestMethod.POST,

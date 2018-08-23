@@ -17,6 +17,8 @@ import id.dni.ext.firebase.cloud.msg.json.FcmMessageDownstreamResponseJson;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageJson;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageNotificationJson;
 import id.dni.ext.firebase.cloud.msg.project.FcmProjectToken;
+import id.dni.ext.firebase.user.msg.FbAuthUserJson;
+import id.dni.ext.firebase.user.msg.FbAuthUserServiceResponse;
 import id.dni.pvim.ext.web.in.Commons;
 import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import java.io.IOException;
@@ -33,7 +35,13 @@ import springstuff.service.AsyncRunnerService;
 import springstuff.service.firebase.FirebaseCloudMessagingService;
 
 /**
- *
+ *firebase.cloudmessaging.proxy.server.url=http://localhost:8080/PvimDmz
+firebase.cloudmessaging.proxy.server.username=admin11
+firebase.cloudmessaging.proxy.server.password=password1
+
+firebase.cloudmessaging.proxy.server.messaging.path=/firebase/messaging/send
+firebase.cloudmessaging.proxy.server.user.create.path=/firebase/messaging/user/create
+firebase.cloudmessaging.proxy.server.user.delete.path=/firebase/messaging/user/delete
  * @author darryl.sulistyan
  */
 @Service
@@ -56,6 +64,10 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
     private String fcmProxyUrl;
     private String fcmProxyUser;
     private String fcmProxyPass;
+    
+    private String fcmProxyMessagingPath;
+    private String fcmProxyUserCreatePath;
+    private String fcmProxyUserDeletePath;
     
     private int fcmTimeout;
     private String fcmServerAuthLegacyKey;
@@ -102,6 +114,33 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
     @Value("${firebase.cloudmessaging.server.key}")
     public void setFcmServerKey(String key) {
         this.fcmServerAuthKey = key;
+    }
+    
+    @Value("${firebase.cloudmessaging.proxy.server.messaging.path}")
+    public void setFcmProxyMessagingPath(String url) {
+        this.fcmProxyMessagingPath = url;
+    }
+    
+    @Value("${firebase.cloudmessaging.proxy.server.user.create.path}")
+    public void setFcmProxyUserCreatePath(String u) {
+        this.fcmProxyUserCreatePath = u;
+    }
+    
+    @Value("${firebase.cloudmessaging.proxy.server.user.delete.path}")
+    public void setFcmProxyUserDeletePath(String u) {
+        this.fcmProxyUserDeletePath = u;
+    }
+    
+    private String getMessagingProxyUrl() {
+        return this.fcmProxyUrl + this.fcmProxyMessagingPath;
+    }
+    
+    private String getUserCreateProxyUrl() {
+        return this.fcmProxyUrl + this.fcmProxyUserCreatePath;
+    }
+    
+    private String getUserDeleteProxyUrl() {
+        return this.fcmProxyUrl + this.fcmProxyUserDeletePath;
     }
     
     @Override
@@ -156,10 +195,14 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
             Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
                     " - jsonObjStr: {0}", jsonObjStr);
             
-            String postJsonRequest = Commons.postJsonRequest(this.fcmProxyUrl, fcmTimeout, jsonObjStr);
+            String fcmMessagingUrl = this.getMessagingProxyUrl();
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - fcmMessagingUrl: {0}", fcmMessagingUrl);
+            String postJsonRequest = Commons.postJsonRequest(fcmMessagingUrl, fcmTimeout, jsonObjStr);
             Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
                     " - obtain result: {0}", postJsonRequest);
-            FcmMessageDownstreamResponseJson responseObj = new FcmMessageDownstreamResponseJson();
+            FcmMessageDownstreamResponseJson responseObj = 
+                    gson.fromJson(postJsonRequest, FcmMessageDownstreamResponseJson.class);
             responseObj.setSuccess(1);
             return responseObj;
             
@@ -243,6 +286,74 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
 //            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
 //            throw new RemoteWsException(ex);
 //        }
+    }
+
+    @Override
+    public FbAuthUserServiceResponse createUser(FbAuthUserJson userJson) throws RemoteWsException {
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    ">> createUser");
+        
+        Gson gson = new Gson();
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - message: {0}", gson.toJson(userJson));
+        
+        try {
+            
+            String jsonObjStr = gson.toJson(userJson);
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - jsonObjStr: {0}", jsonObjStr);
+            
+            String fcmUserCreateProxyUrl = this.getUserCreateProxyUrl();
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - fcmUserCreateProxyUrl: {0}", fcmUserCreateProxyUrl);
+            String postJsonRequest = Commons.postJsonRequest(fcmUserCreateProxyUrl, fcmTimeout, jsonObjStr);
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - obtain result: {0}", postJsonRequest);
+            FbAuthUserServiceResponse responseObj = 
+                    gson.fromJson(postJsonRequest, FbAuthUserServiceResponse.class);
+            return responseObj;
+            
+        } catch (IOException ex) {
+            throw new RemoteWsException(ex);
+            
+        } finally {
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                        "<< createUser");
+        }
+    }
+
+    @Override
+    public FbAuthUserServiceResponse removeUser(FbAuthUserJson userJson) throws RemoteWsException {
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    ">> removeUser");
+        
+        Gson gson = new Gson();
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - message: {0}", gson.toJson(userJson));
+        
+        try {
+            
+            String jsonObjStr = gson.toJson(userJson);
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - jsonObjStr: {0}", jsonObjStr);
+            
+            String fcmUserDeleteProxyUrl = this.getUserDeleteProxyUrl();
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - fcmUserDeleteProxyUrl: {0}", fcmUserDeleteProxyUrl);
+            String postJsonRequest = Commons.postJsonRequest(fcmUserDeleteProxyUrl, fcmTimeout, jsonObjStr);
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    " - obtain result: {0}", postJsonRequest);
+            FbAuthUserServiceResponse responseObj = 
+                    gson.fromJson(postJsonRequest, FbAuthUserServiceResponse.class);
+            return responseObj;
+            
+        } catch (IOException ex) {
+            throw new RemoteWsException(ex);
+            
+        } finally {
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                        "<< removeUser");
+        }
     }
     
 }

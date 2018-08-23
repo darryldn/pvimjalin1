@@ -5,20 +5,11 @@
  */
 package springstuff.service.impl;
 
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.UserRecord;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.messaging.Message;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageDownstreamResponseJson;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageJson;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageNotificationJson;
-import id.dni.ext.prop.FirebaseUtil;
-import id.dni.ext.web.Util;
+import id.dni.ext.firebase.user.msg.FbAuthUserJson;
 import id.dni.ext.web.ws.obj.RestTicketDto;
-import id.dni.ext.web.ws.obj.SendTicketRemoteResponse;
 import id.dni.ext.web.ws.obj.firebase.FbTicketDto;
 import id.dni.pvim.ext.net.TransferTicketDto;
 import id.dni.pvim.ext.repo.exceptions.PvExtPersistenceException;
@@ -45,13 +36,11 @@ import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserByMobileSpecification;
 import id.dni.pvim.ext.repo.db.spec.impl.GetPvimUserTokenByIdSpecification;
 import id.dni.pvim.ext.repo.db.vo.SlmUserTokenVo;
 import id.dni.pvim.ext.repo.db.vo.SlmUserVo;
-import id.dni.pvim.ext.service.json.ProviewLoginResponse;
 import id.dni.pvim.ext.telegram.commons.sender.MessageSender;
 import id.dni.pvim.ext.telegram.repo.ITelegramSuscribersRepository;
 import id.dni.pvim.ext.telegram.repo.db.vo.TelegramSubscriberVo;
 import id.dni.pvim.ext.telegram.repo.spec.TelegramSubscribersListOfPhonesSpec;
 import id.dni.pvim.ext.web.in.Commons;
-import id.dni.pvim.ext.web.in.PVIMAuthToken;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.Callable;
@@ -861,33 +850,43 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         Logger.getLogger(this.getClass().getName()).log(Level.INFO, ">> periodicSendPvimSlmUserData()");
         try {
 //            final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.pvimSlmUserFirebaseDBPath);
-            final FirebaseAuth auth = FirebaseAuth.getInstance(FirebaseApp.getInstance());
+//            final FirebaseAuth auth = FirebaseAuth.getInstance(FirebaseApp.getInstance());
             List<SlmUserVo> usersVo = this.pvimSlmUserRepository.query(new GetAllPvimUsersSpecification());
 //            Map<String, Object> fbUsers = new HashMap<>();
             for (SlmUserVo userVo : usersVo) {
-                FbPvimSlmUserJson fbUser = new FbPvimSlmUserJson();
-                fbUser.setEmail(userVo.getEmail());
-                fbUser.setLoginName(userVo.getLoginName());
-                fbUser.setMobile(userVo.getMobile());
-                fbUser.setUserId(userVo.getUserID());
-                fbUser.setUserType(userVo.getUserType());
-                fbUser.setLocked(userVo.getLocked());
-                String usLoginName = fbUser.getLoginName();
+//                FbPvimSlmUserJson fbUser = new FbPvimSlmUserJson();
+//                fbUser.setEmail(userVo.getEmail());
+//                fbUser.setLoginName(userVo.getLoginName());
+//                fbUser.setMobile(userVo.getMobile());
+//                fbUser.setUserId(userVo.getUserID());
+//                fbUser.setUserType(userVo.getUserType());
+//                fbUser.setLocked(userVo.getLocked());
+//                String usLoginName = fbUser.getLoginName();
                 
                 if (!Commons.isEmptyStrIgnoreSpaces(userVo.getEmail())) {
-                    UserRecord.CreateRequest cr = new UserRecord.CreateRequest();
-                    cr.setEmail(userVo.getEmail());
-                    cr.setPassword("myjalinadmin");
+                    FbAuthUserJson userJson = new FbAuthUserJson();
+                    userJson.setEmail(userVo.getEmail());
+                    userJson.setPassword("myjalinadmin");
+                    userJson.setUsername(userVo.getLoginName());
                     try {
-                        auth.createUser(cr);
-                    } catch (FirebaseAuthException ex) {
-                        // error is logged when user exists, too much log!
-//                        Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+                        this.fcmService.createUser(userJson);
+                    } catch (RemoteWsException ex) {
+                        Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
                     }
+//                    
+//                    UserRecord.CreateRequest cr = new UserRecord.CreateRequest();
+//                    cr.setEmail(userVo.getEmail());
+//                    cr.setPassword("myjalinadmin");
+//                    try {
+//                        auth.createUser(cr);
+//                    } catch (FirebaseAuthException ex) {
+//                        // error is logged when user exists, too much log!
+////                        Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
                 } else {
                     Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
                             "unable to send user: {0} because its email is not valid / empty!", 
-                            usLoginName);
+                            userVo.getLoginName());
                 }
                 
                 
