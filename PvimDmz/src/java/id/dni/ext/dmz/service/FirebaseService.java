@@ -6,8 +6,10 @@
 package id.dni.ext.dmz.service;
 
 import id.dni.ext.dmz.exception.RemoteServiceException;
+import id.dni.ext.firebase.user.msg.FbAuthUserServiceResponse;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageDownstreamResponseJson;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageJson;
+import id.dni.ext.firebase.user.msg.FbAuthUserJson;
 
 /**
  *
@@ -16,5 +18,9 @@ import id.dni.ext.firebase.cloud.msg.json.FcmMessageJson;
 public interface FirebaseService {
     
     public FcmMessageDownstreamResponseJson sendMessage(FcmMessageJson message) throws RemoteServiceException;
+    
+    public FbAuthUserServiceResponse createUser(FbAuthUserJson user) throws RemoteServiceException;
+    
+    public FbAuthUserServiceResponse removeUser(FbAuthUserJson user) throws RemoteServiceException;
     
 }

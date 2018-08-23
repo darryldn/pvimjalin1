@@ -7,16 +7,12 @@ package id.dni.ext.dmz.controller;
 
 import com.google.gson.Gson;
 import id.dni.ext.dmz.exception.RemoteServiceException;
+import id.dni.ext.firebase.user.msg.FbAuthUserServiceResponse;
 import id.dni.ext.dmz.json.FcmMessageWrapperJson;
 import id.dni.ext.dmz.service.FirebaseService;
 import id.dni.ext.dmz.service.LoginService;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageDownstreamResponseJson;
-import id.dni.pvim.ext.service.json.ProviewLoginRequest;
-import id.dni.pvim.ext.service.json.ProviewLoginResponse;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import id.dni.ext.firebase.user.msg.FbAuthUserJson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -47,6 +43,64 @@ public class FirebaseProxyController {
         this.firebaseService = l;
     }
     
+    @RequestMapping(value = "/firebase/messaging/user/create",
+            method = RequestMethod.POST,
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<String> sendPvimUsers(@RequestBody String userJson) 
+            throws RemoteServiceException {
+        
+        Gson gson = new Gson();
+        
+        try {
+            
+            FbAuthUserJson user = gson.fromJson(userJson, FbAuthUserJson.class);
+            FbAuthUserServiceResponse createUser = this.firebaseService.createUser(user);
+            if (createUser.isSuccess()) {
+                return new ResponseEntity<>(gson.toJson(createUser), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(gson.toJson(createUser), HttpStatus.BAD_REQUEST);
+            }
+            
+        } catch (RemoteServiceException ex) {
+            throw ex;
+            
+        } finally {
+            
+        }
+        
+    }
+    
+    @RequestMapping(value = "/firebase/messaging/user/delete",
+            method = RequestMethod.POST,
+            produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<String> deletePvimUsers(@RequestBody String userJson) 
+            throws RemoteServiceException {
+        
+        Gson gson = new Gson();
+        
+        try {
+            
+            FbAuthUserJson user = gson.fromJson(userJson, FbAuthUserJson.class);
+            FbAuthUserServiceResponse removeUser = this.firebaseService.removeUser(user);
+            if (removeUser.isSuccess()) {
+                return new ResponseEntity<>(gson.toJson(removeUser), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(gson.toJson(removeUser), HttpStatus.BAD_REQUEST);
+            }
+            
+        } catch (RemoteServiceException ex) {
+            throw ex;
+            
+        } finally {
+            
+        }
+        
+    }
+    
     @RequestMapping(value = "/firebase/messaging/send",
             method = RequestMethod.POST,
             produces = MediaType.APPLICATION_JSON_VALUE,
@@ -73,9 +127,9 @@ public class FirebaseProxyController {
             
             FcmMessageDownstreamResponseJson sendMessage = this.firebaseService.sendMessage(wrapped.getMsg());
             if (sendMessage.getSuccess() == 1) {
-                return new ResponseEntity<>("Success", HttpStatus.OK);
+                return new ResponseEntity<>(gson.toJson(sendMessage), HttpStatus.OK);
             } else {
-                return new ResponseEntity<>("Failed", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(gson.toJson(sendMessage), HttpStatus.BAD_REQUEST);
             }
             
         } catch (RemoteServiceException ex) {

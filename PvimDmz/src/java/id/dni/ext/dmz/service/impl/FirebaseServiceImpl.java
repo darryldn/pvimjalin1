@@ -8,6 +8,9 @@ package id.dni.ext.dmz.service.impl;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
 import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -15,9 +18,12 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.gson.Gson;
 import id.dni.ext.dmz.exception.RemoteServiceException;
+import id.dni.ext.firebase.user.msg.FbAuthUserServiceResponse;
 import id.dni.ext.dmz.service.FirebaseService;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageDownstreamResponseJson;
 import id.dni.ext.firebase.cloud.msg.json.FcmMessageJson;
+import id.dni.ext.firebase.user.msg.FbAuthUserJson;
+import id.dni.pvim.ext.web.in.Commons;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
@@ -127,5 +133,117 @@ public class FirebaseServiceImpl implements FirebaseService {
                     "<< sendMessage returns {0}", response);
         }
     }
+
+    @Override
+    public FbAuthUserServiceResponse createUser(FbAuthUserJson user) throws RemoteServiceException {
+        
+        FbAuthUserServiceResponse response = new FbAuthUserServiceResponse();
+        final FirebaseAuth auth = FirebaseAuth.getInstance(FirebaseApp.getInstance());
+        
+        if (!Commons.isEmptyStrIgnoreSpaces(user.getEmail())) {
+            UserRecord userByEmail; 
+            boolean doCreateUser;
+            try {
+                userByEmail = auth.getUserByEmail(user.getEmail());
+                if (userByEmail != null) {
+                    Logger.getLogger(this.getClass().getName()).log(Level.FINE, 
+                        " - user with email {0} Already exists, displayName: {1}", 
+                        new Object[]{userByEmail.getEmail(), userByEmail.getDisplayName()});
+                    doCreateUser = false;
+                } else {
+                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+                        " - user with email {0} returns null", 
+                        new Object[]{user.getEmail()});
+                    doCreateUser = true;
+                }
+            } catch (FirebaseAuthException ex) {
+                Logger.getLogger(this.getClass().getName()).log(Level.WARNING, null, ex);
+                doCreateUser = true;
+            }
+            
+            if (doCreateUser) {
+                Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
+                        " - user with email {0} does not exist! Create user now", user.getEmail());
+                // user does not exist. Create now
+                UserRecord.CreateRequest cr = new UserRecord.CreateRequest();
+                cr.setEmail(user.getEmail());
+                cr.setPassword(user.getPassword());
+                
+                try {
+                    auth.createUser(cr);
+                    Logger.getLogger(this.getClass().getName()).log(Level.INFO, 
+                            " - user with email {0} created successfully", user.getEmail());
+                } catch (FirebaseAuthException ex1) {
+                    throw new RemoteServiceException(ex1);
+                }
+            }
+            
+            response.setSuccess(true);
+//            
+//            try {
+//                
+//                UserRecord userByEmail = auth.getUserByEmail(user.getEmail());
+//                if (userByEmail == null) {
+//                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "user with email {0} does not exist!", user.getEmail());
+//                    auth.createUser(cr);
+//                    response.setSuccess(true);
+//                } else {
+//                    Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "user with email {0} exists! displayName: {1}", 
+//                            new Object[] {user.getEmail(), userByEmail.getDisplayName()});
+//                }
+//                
+//            } catch (FirebaseAuthException ex) {
+//                // this generates TOO MUCH error, so, set the error log to FINE
+//                Logger.getLogger(this.getClass().getName()).log(Level.WARNING, null, ex);
+//                response.setSuccess(false);
+//            }
+        } else {
+            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+                    "unable to send user: {0} because its email ({1}) is not valid / empty!", 
+                    new Object[]{user.getUsername(), user.getEmail()});
+            throw new RemoteServiceException(new IllegalArgumentException("Email invalid / empty"));
+            
+        }
+        
+        return response;
+    }
+
+    @Override
+    public FbAuthUserServiceResponse removeUser(FbAuthUserJson user) throws RemoteServiceException {
+        FbAuthUserServiceResponse response = new FbAuthUserServiceResponse();
+        final FirebaseAuth auth = FirebaseAuth.getInstance(FirebaseApp.getInstance());
+        
+        if (!Commons.isEmptyStrIgnoreSpaces(user.getEmail())) {
+            UserRecord userByEmail = null;
+            
+            try {
+                userByEmail = auth.getUserByEmail(user.getEmail());
+            } catch (FirebaseAuthException ex) {
+                // user does not exist.
+                Logger.getLogger(this.getClass().getName()).log(Level.WARNING, null, ex);
+                response.setSuccess(true);
+            }
+            
+            try {
+                if (userByEmail != null) {
+                    auth.deleteUser(userByEmail.getUid());
+                    response.setSuccess(true);
+                }
+            } catch (FirebaseAuthException ex) {
+                Logger.getLogger(this.getClass().getName()).log(Level.WARNING, null, ex);
+                throw new RemoteServiceException(ex);
+            }
+            
+        } else {
+            Logger.getLogger(this.getClass().getName()).log(Level.WARNING, 
+                    "unable to send user: {0} because its email ({1}) is not valid / empty!", 
+                    new Object[]{user.getUsername(), user.getEmail()});
+            throw new RemoteServiceException(new IllegalArgumentException("Email invalid / empty"));
+        }
+        
+        return response;
+    }
+    
+    
     
 }
