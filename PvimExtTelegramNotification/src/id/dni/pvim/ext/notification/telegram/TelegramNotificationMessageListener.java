@@ -557,7 +557,7 @@ public class TelegramNotificationMessageListener implements MessageListener {
         if (rr.getStatus() == S_OK) {
             nr2.setSucFlag("1");
         } else {
-            nr2.setSucFlag("2");
+            nr2.setSucFlag("0");
         }
 
         if (rr.getReceiverName() != null) {
