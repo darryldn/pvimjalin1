@@ -163,7 +163,7 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
                     FcmMessageDownstreamResponseJson sendSimpleNotification = 
                             fcmService.sendSimpleNotification(projectToken, message, fcmTimeout);
                     Gson gson = new Gson();
-                    Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+                    Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                             " - Send notification return {0}", new Object[]{gson.toJson(sendSimpleNotification)});
                 } catch (IOException ex) {
                     Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -174,11 +174,11 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
     }
     
     private FcmMessageDownstreamResponseJson sendMessageViaProxyWithPvimAuth(FcmMessageJson message) throws RemoteWsException {
-        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     ">> sendMessageViaProxyNoAuth");
         
         Gson gson = new Gson();
-        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - message: {0}", gson.toJson(message));
         
         try {
@@ -192,14 +192,14 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
             jsonObj.put("auth", auth);
             
             String jsonObjStr = gson.toJson(jsonObj);
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - jsonObjStr: {0}", jsonObjStr);
             
             String fcmMessagingUrl = this.getMessagingProxyUrl();
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - fcmMessagingUrl: {0}", fcmMessagingUrl);
             String postJsonRequest = Commons.postJsonRequest(fcmMessagingUrl, fcmTimeout, jsonObjStr);
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - obtain result: {0}", postJsonRequest);
             FcmMessageDownstreamResponseJson responseObj = 
                     gson.fromJson(postJsonRequest, FcmMessageDownstreamResponseJson.class);
@@ -210,7 +210,7 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
             throw new RemoteWsException(ex);
             
         } finally {
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                         "<< sendMessageViaProxyNoAuth");
         }
     }
@@ -218,11 +218,11 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
     private FcmMessageDownstreamResponseJson sendMessage2(FcmMessageJson message) 
             throws RemoteWsException {
         
-        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     ">> sendMessage2");
         
         Gson gson = new Gson();
-        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - message: {0}", gson.toJson(message));
         
         Message fbMessage = Message.builder()
@@ -241,7 +241,7 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
         String response = "ERROR";
         try {
             response = FirebaseMessaging.getInstance().send(fbMessage);
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - Send notification return {0}", response);
             FcmMessageDownstreamResponseJson responseObj = new FcmMessageDownstreamResponseJson();
             responseObj.setSuccess(1);
@@ -252,7 +252,7 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
             
         } finally {
         
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     "<< sendMessage2 returns ", response);
         }
     }
@@ -290,24 +290,24 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
 
     @Override
     public FbAuthUserServiceResponse createUser(FbAuthUserJson userJson) throws RemoteWsException {
-        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     ">> createUser");
         
         Gson gson = new Gson();
-        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - message: {0}", gson.toJson(userJson));
         
         try {
             
             String jsonObjStr = gson.toJson(userJson);
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - jsonObjStr: {0}", jsonObjStr);
             
             String fcmUserCreateProxyUrl = this.getUserCreateProxyUrl();
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - fcmUserCreateProxyUrl: {0}", fcmUserCreateProxyUrl);
             String postJsonRequest = Commons.postJsonRequest(fcmUserCreateProxyUrl, fcmTimeout, jsonObjStr);
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - obtain result: {0}", postJsonRequest);
             FbAuthUserServiceResponse responseObj = 
                     gson.fromJson(postJsonRequest, FbAuthUserServiceResponse.class);
@@ -317,31 +317,31 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
             throw new RemoteWsException(ex);
             
         } finally {
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                         "<< createUser");
         }
     }
 
     @Override
     public FbAuthUserServiceResponse removeUser(FbAuthUserJson userJson) throws RemoteWsException {
-        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     ">> removeUser");
         
         Gson gson = new Gson();
-        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+        Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - message: {0}", gson.toJson(userJson));
         
         try {
             
             String jsonObjStr = gson.toJson(userJson);
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - jsonObjStr: {0}", jsonObjStr);
             
             String fcmUserDeleteProxyUrl = this.getUserDeleteProxyUrl();
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - fcmUserDeleteProxyUrl: {0}", fcmUserDeleteProxyUrl);
             String postJsonRequest = Commons.postJsonRequest(fcmUserDeleteProxyUrl, fcmTimeout, jsonObjStr);
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                     " - obtain result: {0}", postJsonRequest);
             FbAuthUserServiceResponse responseObj = 
                     gson.fromJson(postJsonRequest, FbAuthUserServiceResponse.class);
@@ -351,7 +351,7 @@ public class FirebaseCloudMessagingServiceImpl implements FirebaseCloudMessaging
             throw new RemoteWsException(ex);
             
         } finally {
-            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.INFO, 
+            Logger.getLogger(FirebaseCloudMessagingServiceImpl.class.getName()).log(Level.FINE, 
                         "<< removeUser");
         }
     }

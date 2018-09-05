@@ -847,7 +847,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
     @Override
     @Scheduled(fixedRateString = "${PvimSlmUser.firebase.update.timestamp.interval}")
     public void periodicSendPvimSlmUserData() {
-        Logger.getLogger(this.getClass().getName()).log(Level.INFO, ">> periodicSendPvimSlmUserData()");
+        Logger.getLogger(this.getClass().getName()).log(Level.FINE, ">> periodicSendPvimSlmUserData()");
         try {
 //            final DatabaseReference db = this.firebaseDB.getDatabaseReference(this.pvimSlmUserFirebaseDBPath);
 //            final FirebaseAuth auth = FirebaseAuth.getInstance(FirebaseApp.getInstance());
@@ -917,7 +917,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
             Logger.getLogger(FirebaseRemoteDataRepositoryServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
             
         } finally {
-            Logger.getLogger(this.getClass().getName()).log(Level.INFO, "<< periodicSendPvimSlmUserData()");
+            Logger.getLogger(this.getClass().getName()).log(Level.FINE, "<< periodicSendPvimSlmUserData()");
             
         }
     }
