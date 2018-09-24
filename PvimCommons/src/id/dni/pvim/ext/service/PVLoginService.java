@@ -85,9 +85,12 @@ public class PVLoginService {
                 response.setSuccess(false);
                 
             } else {
-                if (xmlReturn.contains("SSOP_INVALID_PARAMETER(4)")) {
+                if (xmlReturn.contains("SSOP_INVALID_PARAMETER(4)") ||
+                        xmlReturn.contains("<faultcode>soapenv:Server.userException</faultcode>") ||
+                        xmlReturn.contains("<faultstring>com.wn.pve.platform.exception.PVEBusinessException</faultstring>")) {
                     response.setSuccess(true);
                 }
+                
                 
             }
             
