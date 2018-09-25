@@ -601,7 +601,7 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                         msg.setPriority("high");
                         
                         FcmMessageNotificationJson notif = new FcmMessageNotificationJson();
-                        notif.setTitle("PVIM Message");
+                        notif.setTitle("ATM Vendor App");
                         notif.setBody(context);
                         msg.setNotification(notif);
                         
