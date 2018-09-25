@@ -215,6 +215,19 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
         }
     }
     
+    private String notifTitle;
+    private String notifPrio;
+    
+    @Value("${Notification.title}")
+    public void setNotifTitle(String t) {
+        this.notifTitle = t;
+    }
+    
+    @Value("${Notification.priority}")
+    public void setNotifPrio(String prio) {
+        this.notifPrio = prio;
+    }
+    
 
     /**
      * Remove tickets in firebase database.
@@ -598,10 +611,10 @@ public class FirebaseRemoteDataRepositoryServiceImpl implements RemoteDataReposi
                         String to = token.getMessageToken();
                         FcmMessageJson msg = new FcmMessageJson();
                         msg.setTo(to);
-                        msg.setPriority("high");
+                        msg.setPriority(notifPrio);
                         
                         FcmMessageNotificationJson notif = new FcmMessageNotificationJson();
-                        notif.setTitle("ATM Vendor App");
+                        notif.setTitle(notifTitle);
                         notif.setBody(context);
                         msg.setNotification(notif);
                         
