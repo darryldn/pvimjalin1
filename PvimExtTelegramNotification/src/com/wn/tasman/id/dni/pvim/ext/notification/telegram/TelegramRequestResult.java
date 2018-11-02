@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package id.dni.pvim.ext.notification.telegram;
+package com.wn.tasman.id.dni.pvim.ext.notification.telegram;
 
 /**
  *

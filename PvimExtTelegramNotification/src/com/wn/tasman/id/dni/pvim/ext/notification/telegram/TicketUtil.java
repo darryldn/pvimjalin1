@@ -1,4 +1,4 @@
-package id.dni.pvim.ext.notification.telegram;
+package com.wn.tasman.id.dni.pvim.ext.notification.telegram;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
